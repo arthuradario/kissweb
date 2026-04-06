@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kissweb - login e cadastro</title>
+    <link href="css/style.css" rel="stylesheet">
+    <script src="js/script.js" defer></script>
+</head>
+<body>
+    
+<!-- ══ AUTH ══ -->
+<div id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="wordmark">kissweb</div>
+      <div class="tagline">conecte histórias, um beijo de cada vez</div>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">entrar</button>
+      <button class="auth-tab" onclick="switchTab('register')">cadastrar</button>
+    </div>
+    <div class="auth-form" id="form-login">
+      <div class="field-group"><label>e-mail</label><input type="email" id="l-email" placeholder="seu@email.com" autocomplete="email"></div>
+      <div class="field-group"><label>senha</label><input type="password" id="l-pw" placeholder="••••••••" autocomplete="current-password"></div>
+      <div class="auth-error" id="l-err"></div>
+      <button class="auth-btn" onclick="doLogin()">entrar</button>
+      <div class="auth-sep">ou</div>
+      <button class="auth-guest" onclick="doGuest()">continuar sem conta (modo visitante)</button>
+    </div>
+    <div class="auth-form" id="form-register" style="display:none">
+      <div class="field-group"><label>nome</label><input type="text" id="r-name" placeholder="seu nome" autocomplete="name"></div>
+      <div class="field-group"><label>e-mail</label><input type="email" id="r-email" placeholder="seu@email.com" autocomplete="email"></div>
+      <div class="field-group"><label>senha (mín. 6 caracteres)</label><input type="password" id="r-pw" placeholder="••••••••" autocomplete="new-password"></div>
+      <div class="auth-error" id="r-err"></div>
+      <button class="auth-btn" onclick="doRegister()">criar conta</button>
+      <div class="auth-sep">ou</div>
+      <button class="auth-guest" onclick="doGuest()">continuar sem conta (modo visitante)</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
