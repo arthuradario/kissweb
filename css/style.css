@@ -353,6 +353,14 @@ body {
     opacity: 0.9;
 }
 
+#btn-manage-webs {
+    margin-right: 12px;
+}
+
+#btn-logo-webs {
+    width: 22px;
+}
+
 .web-tabs {
     display: flex;
     flex: 1;
@@ -373,13 +381,16 @@ body {
 .web-tabs::-webkit-scrollbar {
     height: 6px;
 }
+
 .web-tabs::-webkit-scrollbar-thumb {
     background: #cccccc;
     border-radius: 10px;
 }
+
 .web-tabs::-webkit-scrollbar-thumb:hover {
     background: #858585;
 }
+
 .web-tab-container {
     display: flex;
     align-items: center;
@@ -411,27 +422,29 @@ body {
     opacity: 1;
 }
 
+.icone-adicionar {
+
+    color: #fff;
+}
+
 .icones-topbar {
     font-size: 20px !important;
     color: var(--text);
 }
 
 .btn-new-web {
+    margin-left: 12px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background-color: var(--accent);
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 7px 14px;
-    border-radius: 20px;
-    border: 1.5px dashed var(--border);
-    background: transparent;
-    cursor: pointer;
-    font-size: .86rem;
-    font-weight: 600;
-    color: var(--text-muted);
+    justify-content: center;
     transition: all .15s;
     flex-shrink: 0;
-    font-family: 'DM Sans', sans-serif;
-    white-space: nowrap;
 }
 
 .btn-new-web:hover {
@@ -478,46 +491,98 @@ body {
     stroke-linejoin: round;
 }
 
-.topbar-menu {
-    position: absolute;
-    top: calc(100% + 10px);
-    right: 0;
-    width: 240px;
+/* ══ SISTEMA DE MENUS UNIFICADO (Topbar & Context) ══ */
+
+/* 1. O Container Pai */
+.topbar-menu, 
+#ctx-menu, 
+#web-ctx-menu {
+    position: absolute; /* Para o topbar usar top/right */
+    z-index: 2200;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: 12px;
     box-shadow: var(--shadow-lg);
-    overflow: hidden;
+    padding: 5px;
+    min-width: 180px; /* Aumentei levemente para acomodar textos de exportação */
     display: none;
-    z-index: 2200;
+    pointer-events: all;
 }
 
-.topbar-menu.v {
+#export-menu {
+    position: fixed;
+    top: 55px;    /* Ajuste a altura para ficar exatamente embaixo da sua barra */
+    right: 60px; /* Ajuste a distância da direita para alinhar com o ícone */
+    left: auto;   /* Garante que ele não herde alinhamentos à esquerda */
+}
+
+/* Regra específica para os menus de contexto (que usam position fixed via JS) */
+#ctx-menu, #web-ctx-menu {
+    position: fixed;
+}
+
+/* 2. Gatilho de Visibilidade e Animação */
+.topbar-menu.v, 
+#ctx-menu.v, 
+#web-ctx-menu.v {
     display: block;
-    animation: fadeIn .12s ease;
+    animation: fadeIn .1s ease;
 }
 
-.topbar-menu-item {
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(.95); }
+    to { opacity: 1; transform: none; }
+}
+
+/* 3. Os Itens do Menu (Botões) */
+.topbar-menu-item, 
+.ctx-item {
     width: 100%;
-    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
     border: none;
     background: transparent;
-    text-align: left;
     cursor: pointer;
+    text-align: left;
     font-family: 'DM Sans', sans-serif;
-    font-size: .9rem;
-    color: var(--text);
-    transition: background .15s;
+    font-size: .82rem; /* Equilíbrio entre o .9 e o .79 */
+    color: var(--text); /* O cinza padrão do seu site */
+    transition: all .15s;
+    white-space: nowrap;
 }
 
-.topbar-menu-item:hover {
+.topbar-menu-item:hover, 
+.ctx-item:hover {
     background: var(--bg);
 }
 
-.topbar-menu-item+.topbar-menu-item {
-    border-top: 1px solid var(--border);
+/* 4. Padronização dos Ícones */
+.topbar-menu-item .material-symbols-outlined, 
+.ctx-item .material-symbols-outlined {
+    font-size: 22px;      /* Tamanho maior como você pediu */
+    color: var(--text);   /* Força o cinzinha em todos */
+    opacity: 0.8;         /* Deixa o cinza um pouco mais suave/moderno */
+    flex-shrink: 0;
 }
 
+/* 5. Separador */
+.menu-sep, 
+.ctx-sep {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 6px;
+}
+
+/* Estilo de perigo (ex: Deletar) para manter a funcionalidade do ctx */
+.ctx-item.danger {
+    color: var(--accent);
+}
+.ctx-item.danger .material-symbols-outlined {
+    color: var(--accent);
+}
 .user-pill {
     display: flex;
     align-items: center;
@@ -823,12 +888,6 @@ svg#lines {
     margin-bottom: 9px;
 }
 
-#panel .panel-section:first-of-type .panel-title {
-    font-size: 1rem;
-    letter-spacing: .04em;
-    margin-bottom: 11px;
-}
-
 .form-group {
     margin-bottom: 8px;
 }
@@ -855,6 +914,10 @@ svg#lines {
     color: var(--text);
     outline: none;
     transition: border-color .15s;
+}
+
+#inp-gcolor {
+    height: auto;
 }
 
 .form-input:focus,
@@ -905,13 +968,14 @@ textarea {
 }
 
 .photo-upload .pu-icon {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto;
 }
+
 
 .photo-upload .pu-label {
     font-size: .68rem;
@@ -919,13 +983,20 @@ textarea {
     text-align: center;
 }
 
-.photo-upload .pu-icon svg {
+.photo-upload .pu-icon span {
     width: 20px;
     height: 20px;
     stroke: var(--text-muted);
     fill: none;
     stroke-width: 1.5;
     stroke-linecap: round;
+}
+
+.icone-foto {
+    font-size: 30px !important;
+    text-align: center;
+    margin-bottom: 10px;
+    color: var(--text-muted);
 }
 
 /* gender toggle */
@@ -1237,78 +1308,20 @@ textarea {
 }
 
 .btn-load-more {
-    display: flex;            /* Coloca o ícone e o texto lado a lado */
-    align-items: center;      /* Alinha os dois verticalmente pelo centro */
-    justify-content: center;   /* Centraliza o grupo todo horizontalmente na div */
-    gap: 8px;                 /* Cria um espaço entre o ícone e o texto */
-    
+    display: flex;
+    /* Coloca o ícone e o texto lado a lado */
+    align-items: center;
+    /* Alinha os dois verticalmente pelo centro */
+    justify-content: center;
+    /* Centraliza o grupo todo horizontalmente na div */
+    gap: 8px;
+    /* Cria um espaço entre o ícone e o texto */
+
 }
 
 .icone-carregar {
     font-size: 22px !important;
     color: var(--accent);
-}
-
-/* ══ CTX MENU ══ */
-#ctx-menu,
-#web-ctx-menu {
-    position: fixed;
-    z-index: 200;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    box-shadow: var(--shadow-lg);
-    padding: 5px;
-    min-width: 163px;
-    display: none;
-}
-
-#ctx-menu.v,
-#web-ctx-menu.v {
-    display: block;
-    animation: fadeIn .1s ease;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: scale(.93)
-    }
-
-    to {
-        opacity: 1;
-        transform: none
-    }
-}
-
-.ctx-item {
-    padding: 7px 11px;
-    border-radius: 7px;
-    font-size: .79rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: background .1s;
-    color: var(--text);
-}
-
-.ctx-item:hover {
-    background: var(--bg);
-}
-
-.ctx-item.danger {
-    color: var(--accent);
-}
-
-.ctx-item.danger:hover {
-    background: var(--accent-soft);
-}
-
-.ctx-sep {
-    height: 1px;
-    background: var(--border);
-    margin: 3px 0;
 }
 
 /* ══ TEMP LINE ══ */
@@ -1815,7 +1828,7 @@ textarea {
     left: 50%;
     transform: translateX(-50%);
     background: var(--text);
-    color: #fff;
+    color: var(--surface);
     padding: 7px 16px;
     border-radius: 20px;
     font-size: .76rem;

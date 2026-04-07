@@ -394,7 +394,7 @@ function renderLines(w) {
     });
 }
 
-/* ══ AUTO LAYOUT ═════════════════════════════════════════ */
+/* ══ AUTO LAYOUT ═════════════════════════════════════════ 
 const LAYOUT_NAMES = ['círculo', 'anéis', 'grade', 'estrela', 'espiral', 'aleatório'];
 function autoLayout() {
     const w = cw(); if (!w || !w.people.length) { showToast('nenhuma pessoa para organizar.'); return; }
@@ -426,7 +426,7 @@ function autoLayout() {
         renderLines(w); if (t < 1) requestAnimationFrame(anim); else { save(); showToast(`layout: ${mode}`); }
     }
     requestAnimationFrame(anim);
-}
+} função de auto layout/ organizar automaticamente removida indeterminadamente */
 
 /* ══ TABLE VIEW ══════════════════════════════════════════ */
 function openTableView() {
@@ -464,9 +464,9 @@ function renderTableView(w) {
       <td style="padding:8px;font-size:.75rem;color:var(--text-muted)">${gn || '—'}</td>
       <td style="padding:8px">
         <div style="display:flex;gap:4px">
-          <button onclick="event.stopPropagation();$('table-modal').classList.remove('v');openSoloView('${p.id}')" style="background:var(--bg);border:1.5px solid var(--border);cursor:pointer;color:var(--text);font-size:.72rem;padding:3px 8px;border-radius:6px" title="ver teia">teia</button>
-          <button onclick="event.stopPropagation();$('table-modal').classList.remove('v');openEdit('${p.id}')" style="background:var(--bg);border:1.5px solid var(--border);cursor:pointer;color:var(--text);font-size:.72rem;padding:3px 8px;border-radius:6px" title="editar">editar</button>
-          <button onclick="event.stopPropagation();delPerson('${p.id}');renderTableView(cw())" style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:.8rem;padding:3px 7px;border-radius:6px" title="remover">remover</button>
+          <button onclick="event.stopPropagation();$('table-modal').classList.remove('v');openSoloView('${p.id}')" style="background:none;border:none;cursor:pointer;color:var(--text);font-size:.72rem;padding:3px 8px;border-radius:6px" title="ver teia individual"><span class="material-symbols-outlined">hub</span></button>
+          <button onclick="event.stopPropagation();$('table-modal').classList.remove('v');openEdit('${p.id}')" style="background:none;border:none;cursor:pointer;color:var(--text);font-size:.72rem;padding:3px 8px;border-radius:6px" title="editar"><span class="material-symbols-outlined">edit_square</span></button>
+          <button onclick="event.stopPropagation();delPerson('${p.id}');renderTableView(cw())" style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:.8rem;padding:3px 7px;border-radius:6px" title="remover"><span class="material-symbols-outlined">delete</span></button>
         </div>
       </td>`;
         tbody.appendChild(tr);
@@ -592,7 +592,7 @@ function openSoloView(pid) {
     const p = w.people.find(x => x.id === pid); if (!p) return;
     const partners = w.connections.filter(c => c.a === pid || c.b === pid)
         .map(c => w.people.find(x => x.id === (c.a === pid ? c.b : c.a))).filter(Boolean);
-    $('solo-title').textContent = `${p.name} — ${partners.length} conexão${partners.length !== 1 ? 'es' : ''}`;
+    $('solo-title').textContent = `${p.name} — ${partners.length} ${partners.length !== 1 ? 'conexões' : 'conexão'}`;
     soloVx = 0; soloVy = 0; soloVs = 1;
     soloSvgData = { person: p, partners };
     renderSoloSvg();
@@ -1131,7 +1131,7 @@ wrap.addEventListener('touchend', () => { isDC = false; _lastDist = 0; });
 $('search-open').onclick = () => openSearchModal();
 $('zoom-in').onclick = () => applyZoom(1.2);
 $('zoom-out').onclick = () => applyZoom(.8);
-$('zoom-reset').onclick = () => { vx = 0; vy = 0; vscale = 1; canvasEl.style.transform = 'translate(0,0) scale(1)'; renderLines(cw()); };
+//$('zoom-reset').onclick = () => { vx = 0; vy = 0; vscale = 1; canvasEl.style.transform = 'translate(0,0) scale(1)'; renderLines(cw()); }; botão removido indeterminadamente, pode ser refeito mais tarde se houver demanda
 function applyZoom(d) {
     hideCtx(); hideWebCtx();
     const ns = Math.max(.2, Math.min(3, vscale * d));
@@ -1180,7 +1180,7 @@ $('new-web-create').onclick = () => {
 $('new-web-name').addEventListener('keydown', e => { if (e.key === 'Enter') $('new-web-create').click(); });
 
 /* ══ SHARE ════════════════════════════════════════════════ */
-$('btn-share').onclick = () => { const w = cw(); if (!w) return; updateShareUI(w); $('share-modal').classList.add('v'); };
+$('btn-share').onclick = () => { hideWebCtx();const w = cw(); if (!w) return; updateShareUI(w); $('share-modal').classList.add('v'); };
 function updateShareUI(w) {
     const on = w.shared; $('share-toggle').classList.toggle('on', on);
     $('share-on').style.display = on ? 'block' : 'none'; $('share-off').style.display = on ? 'none' : 'block';
@@ -1223,7 +1223,7 @@ function loadShared(data) {
     isShared = true; sharedData = data; selectedPersonId = null; $('auth-overlay').classList.add('hidden');
     ['topbar', 'canvas-wrap', 'zoom-controls'].forEach(id => $(id).style.display = '');
     $('empty-state').style.display = ''; $('panel').style.display = 'none'; $('panel-toggle').style.display = 'none';
-    ['btn-new-web', 'btn-share', 'btn-toggle-panel', 'btn-batch-add', 'btn-auto-layout'].forEach(id => $(id).style.display = 'none');
+    ['btn-new-web', 'btn-share', 'btn-toggle-panel', 'btn-batch-add'/*, 'btn-auto-layout'*/].forEach(id => $(id).style.display = 'none');
     $('shared-owner').textContent = data.ownerName; $('shared-banner').classList.add('v');
     $('canvas-wrap').style.top = '94px'; $('uname').textContent = 'visualizando'; $('ua').textContent = 'V';
     data.people.forEach(p => { const el = makeNode(p); el.style.left = p.x + 'px'; el.style.top = p.y + 'px'; canvasEl.appendChild(el); nodeEls[p.id] = el; });
@@ -1231,32 +1231,155 @@ function loadShared(data) {
 }
 
 /* ══ EXPORT / IMPORT ═════════════════════════════════════ */
-function toggleExportMenu() { $('export-menu').classList.toggle('v'); }
+function toggleExportMenu() { console.log("botão exportar clicado"); $('export-menu').classList.toggle('v'); }
 function hideExportMenu() { $('export-menu').classList.remove('v'); }
 function toggleSoloExportMenu() { $('solo-export-menu').classList.toggle('v'); }
 function hideSoloExportMenu() { $('solo-export-menu').classList.remove('v'); }
 
+//consertar a exportação como imagem e pdf, imagem cortada
+
 async function exportWebAsImage() {
-    const w = cw(); if (!w) return;
-    if (typeof html2canvas === 'undefined') { showAlert('biblioteca html2canvas não carregada ainda. tente novamente em instantes.'); return; }
+    const w = cw();
+    if (!w || w.people.length === 0) return;
+    if (typeof html2canvas === 'undefined') { showAlert('Biblioteca não carregada.'); return; }
+
     try {
-        showToast('gerando imagem…');
-        const c = await html2canvas($('canvas-wrap'), { backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg') || '#f7f5f2', scale: 2, useCORS: true });
-        const url = c.toDataURL('image/png'); const a = document.createElement('a');
-        a.href = url; a.download = `kissweb-${sanitizeFilename(w.name)}.png`; a.click(); showToast('imagem exportada!');
-    } catch { showToast('falha ao exportar imagem.'); }
+        showToast('Enquadrando teia...');
+
+        // 1. Calcular os limites reais (Bounding Box)
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        w.people.forEach(p => {
+            const el = nodeEls[p.id];
+            const nW = el ? el.offsetWidth : 80;
+            const nH = el ? el.offsetHeight : 80;
+            minX = Math.min(minX, p.x);
+            minY = Math.min(minY, p.y);
+            maxX = Math.max(maxX, p.x + nW);
+            maxY = Math.max(maxY, p.y + nH);
+        });
+
+        const padding = 100;
+        const exportW = (maxX - minX) + (padding * 2);
+        const exportH = (maxY - minY) + (padding * 2);
+
+        // 2. REPOSICIONAR E "CONGELAR" (Como você pediu, ele não volta ao que era)
+        vx = -minX + padding;
+        vy = -minY + padding;
+        vscale = 1; 
+        renderCanvas();
+
+        // 3. O SEGREDO: Forçar o canvasEl a ter o tamanho total da teia
+        // Isso impede que o CSS "overflow: hidden" do pai corte a imagem
+        const originalWidth = canvasEl.style.width;
+        const originalHeight = canvasEl.style.height;
+        const originalPosition = canvasEl.style.position;
+
+        canvasEl.style.width = exportW + 'px';
+        canvasEl.style.height = exportH + 'px';
+        canvasEl.style.position = 'relative'; // Garante que o html2canvas veja o ponto 0,0 corretamente
+
+        // Pequeno delay para o DOM atualizar o novo tamanho
+        await new Promise(r => setTimeout(r, 200));
+
+        showToast('Gerando arquivo...');
+
+        const c = await html2canvas(canvasEl, {
+            backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg') || '#f7f5f2',
+            scale: 2,
+            useCORS: true,
+            // x: 0 e y: 0 agora funcionam porque o canvasEl tem o tamanho exato da teia
+            x: 0,
+            y: 0,
+            width: exportW,
+            height: exportH,
+            // Estas duas linhas abaixo corrigem o problema de cortar o topo/lateral
+            scrollX: 0,
+            scrollY: -window.scrollY 
+        });
+
+        // 4. Restaurar apenas o estilo de tamanho (a posição vx/vy continua nova)
+        canvasEl.style.width = originalWidth;
+        canvasEl.style.height = originalHeight;
+        canvasEl.style.position = originalPosition;
+
+        const url = c.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `kissweb-${sanitizeFilename(w.name)}.png`;
+        a.click();
+        showToast('Imagem exportada!');
+
+    } catch (e) {
+        console.error(e);
+        showToast('Erro ao exportar.');
+    }
 }
+
 async function exportWebAsPDF() {
-    const w = cw(); if (!w) return;
-    if (!window.jspdf) { showAlert('bibliotecas não carregadas. tente novamente.'); return; }
+    const w = cw();
+    if (!w || w.people.length === 0) return;
+    if (!window.jspdf) { showAlert('PDF lib não carregada.'); return; }
+
     try {
-        showToast('gerando pdf…');
-        const c = await html2canvas($('canvas-wrap'), { backgroundColor: '#ffffff', scale: 2, useCORS: true });
+        showToast('Enquadrando teia para PDF...');
+
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        w.people.forEach(p => {
+            const el = nodeEls[p.id];
+            const nW = el ? el.offsetWidth : 80;
+            const nH = el ? el.offsetHeight : 80;
+            minX = Math.min(minX, p.x);
+            minY = Math.min(minY, p.y);
+            maxX = Math.max(maxX, p.x + nW);
+            maxY = Math.max(maxY, p.y + nH);
+        });
+
+        const padding = 100;
+        const exportW = (maxX - minX) + (padding * 2);
+        const exportH = (maxY - minY) + (padding * 2);
+
+        vx = -minX + padding;
+        vy = -minY + padding;
+        vscale = 1;
+        renderCanvas();
+
+        const originalWidth = canvasEl.style.width;
+        const originalHeight = canvasEl.style.height;
+
+        canvasEl.style.width = exportW + 'px';
+        canvasEl.style.height = exportH + 'px';
+
+        await new Promise(r => setTimeout(r, 200));
+
+        const c = await html2canvas(canvasEl, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            useCORS: true,
+            x: 0,
+            y: 0,
+            width: exportW,
+            height: exportH,
+            scrollX: 0,
+            scrollY: -window.scrollY
+        });
+
+        canvasEl.style.width = originalWidth;
+        canvasEl.style.height = originalHeight;
+
         const imgData = c.toDataURL('image/png');
-        const pdf = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'px', format: [c.width, c.height] });
-        pdf.addImage(imgData, 'PNG', 0, 0, c.width, c.height);
-        pdf.save(`kissweb-${sanitizeFilename(w.name)}.pdf`); showToast('pdf exportado!');
-    } catch { showToast('falha ao exportar pdf.'); }
+        const pdf = new window.jspdf.jsPDF({
+            orientation: exportW > exportH ? 'landscape' : 'portrait',
+            unit: 'px',
+            format: [exportW, exportH]
+        });
+
+        pdf.addImage(imgData, 'PNG', 0, 0, exportW, exportH);
+        pdf.save(`kissweb-${sanitizeFilename(w.name)}.pdf`);
+        showToast('PDF exportado!');
+    } catch (e) {
+        console.error(e);
+        showToast('Erro no PDF.');
+    }
 }
 function exportWebAsFile() {
     const w = cw(); if (!w) return;
@@ -1285,9 +1408,9 @@ $('btn-export').onclick = toggleExportMenu;
 $('export-img').onclick = () => { hideExportMenu(); exportWebAsImage(); };
 $('export-pdf').onclick = () => { hideExportMenu(); exportWebAsPDF(); };
 $('export-file').onclick = () => { hideExportMenu(); exportWebAsFile(); };
-$('import-file-btn').onclick = () => { hideExportMenu(); $('import-file').click(); };
+$('import-file-btn').onclick = () => { hideExportMenu(); $('import-file').click(); }
 $('import-file').addEventListener('change', handleImportFile);
-$('btn-import').onclick = () => $('import-file').click();
+//$('btn-import').onclick = () => $('import-file').click();; removido pois foi integrado ao menu de exportação, pode ser refeito mais tarde se houver demanda
 $('solo-export-btn').onclick = e => { e.stopPropagation(); toggleSoloExportMenu(); };
 $('solo-export-img').onclick = () => { hideSoloExportMenu(); exportSoloAsImage(); };
 $('solo-export-pdf').onclick = () => { hideSoloExportMenu(); exportSoloAsPDF(); };
@@ -1298,16 +1421,16 @@ $('btn-add-person').onclick = addPerson;
 $('inp-name').addEventListener('keydown', e => { if (e.key === 'Enter') addPerson(); });
 $('btn-add-group').onclick = addGroup;
 $('inp-gname').addEventListener('keydown', e => { if (e.key === 'Enter') addGroup(); });
-$('btn-auto-layout').onclick = autoLayout;
+//$('btn-auto-layout').onclick = autoLayout; organizar automaticamente retirado temporariamente, pode ser refeito mais tarde se houver demanda e melhorado
 $('btn-table-view').onclick = openTableView;
-$('btn-batch-add').onclick = openBatchAdd;
+//$('btn-batch-add').onclick = openBatchAdd; adicionar em lote retirado temporariamente
 $('btn-theme').onclick = toggleTheme;
 
 // modal click-outside
 ['edit-modal', 'new-web-modal', 'share-modal', 'user-modal', 'alert-modal', 'confirm-modal',
-    'input-modal', 'search-modal', 'batch-modal', 'group-picker-modal', 'solo-modal'].forEach(id => {
+    'input-modal', 'search-modal', /*'batch-modal',*/ 'group-picker-modal', 'solo-modal'].forEach(id => {
         $(id).addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('v'); });
-    });
+    }); //batch modal/adicionar em lote retirado temporariamente
 
 /* ══ INIT ════════════════════════════════════════════════ */
 function init() {
