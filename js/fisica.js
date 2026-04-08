@@ -7,10 +7,10 @@ class PhysicsEngine {
         this.enabled = false;
         // Ajuste fino das forças (baseado no seu teste original)
         this.repulsionStrength = 500000; 
-        this.attractionStrength = 0.01;
-        this.gravityStrength = 0.04;
-        this.damping = 0.85; 
-        this.maxSpeed = 10;
+        this.attractionStrength = 0.1;
+        this.gravityStrength = 0.02;
+        this.damping = 0.2; 
+        this.maxSpeed = 60;
 
     }
 

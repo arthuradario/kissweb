@@ -30,7 +30,6 @@ let _currentTheme = 'claro';
 
 // solo view pan/zoom state
 let soloVx = 0, soloVy = 0, soloVs = 1;
-let soloPanning = false, soloPanStart = null;
 
 // ── persist ──────────────────────────────────────────────
 function save() {
@@ -110,7 +109,7 @@ function renderSearchResults(q) {
 
         const photo = p.photo
             ? `<img class="sr-photo" src="${p.photo}">`
-            : `<div class="sr-photo"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`;
+            : `<div class="sr-photo"><span class="material-symbols-outlined">person</span></div>`;
 
         row.innerHTML = `
             ${photo}
@@ -168,7 +167,7 @@ const GICONS = {
     female: `<svg viewBox="0 0 24 24" fill="white"><circle cx="12" cy="8" r="5"/><rect x="11" y="13" width="2" height="8" rx="1"/><rect x="8.5" y="18" width="7" height="2" rx="1"/></svg>`,
     male: `<svg viewBox="0 0 24 24" fill="white"><circle cx="9.5" cy="14.5" r="5.5"/><rect x="15.5" y="3" width="5.5" height="2" rx="1"/><rect x="19" y="3" width="2" height="5.5" rx="1"/><line x1="13.5" y1="10.5" x2="19.5" y2="4.5" stroke="white" stroke-width="2.2" stroke-linecap="round"/></svg>`
 };
-const PERSON_PH = `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.4" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+const PERSON_PH = `<span class="material-symbols-outlined" font-size: inherit;">person</span>`;
 
 /* ══ AUTH ═══════════════════════════════════════════════ */
 function switchTab(t) {
@@ -208,11 +207,11 @@ function enterApp() {
         el.classList.add('hidden');
     }
     showAppUI();
-    const u = S.currentUser;
-    $('uname').textContent = u.guest ? 'visitante' : u.name;
-    $('ua').textContent = u.guest ? '?' : u.name.charAt(0).toUpperCase();
-    $('um-name').textContent = u.guest ? 'modo visitante' : u.name;
-    $('um-email').textContent = u.guest ? 'sem conta — dados salvos localmente' : u.email;
+    // const u = S.currentUser;
+    // $('uname').textContent = u.guest ? 'visitante' : u.name;
+    // $('ua').textContent = u.guest ? '?' : u.name.charAt(0).toUpperCase();
+    // $('um-name').textContent = u.guest ? 'modo visitante' : u.name;
+    // $('um-email').textContent = u.guest ? 'sem conta — dados salvos localmente' : u.email; // opções de mostrar mais dados da conta no modal
     if (!myWebs().length) { showNoWebsState(); return; }
     if (!S.currentWebId || !myWebs().find(w => w.id === S.currentWebId)) S.currentWebId = myWebs()[0].id;
     save(); rebuildNodes(); render();
@@ -248,7 +247,7 @@ function hideNoWebsState() { $('no-webs-state').classList.remove('v'); }
 /* ══ WEB MANAGEMENT ══════════════════════════════════════ */
 function createWeb(name, doSave = true) {
     const oid = S.currentUser ? (S.currentUser.guest ? 'guest' : S.currentUser.id) : 'guest';
-    const w = { id: uid(), name, ownerId: oid, people: [], connections: [], groups: [], shared: false, shareId: uid(), sharePassword: '', shareAccess: 'free' };
+    const w = { id: uid(), name, ownerId: oid, people: [], connections: [], groups: []/*, shared: false, shareId: uid(), sharePassword: '', shareAccess: 'free' */ };
     S.webs.push(w); S.currentWebId = w.id; if (doSave) save(); return w;
 }
 
@@ -261,7 +260,10 @@ function renderTabs() {
         const t = document.createElement('div'); t.className = 'web-tab-container';
         const btn = document.createElement('button');
         btn.className = 'web-tab' + (w.id === S.currentWebId ? ' active' : ''); btn.textContent = w.name;
-        btn.onclick = () => switchWeb(w.id);
+        btn.onclick = () => {
+            switchWeb(w.id);
+            centerWeb();
+        }
         btn.addEventListener('contextmenu', e => { e.preventDefault(); showWebCtx(e, w.id); });
         t.appendChild(btn); tabs.appendChild(t);
     });
@@ -475,7 +477,7 @@ function renderTableView(w) {
       <td style="padding:8px;font-size:.75rem;color:var(--text-muted)">${gn || '—'}</td>
       <td style="padding:8px">
         <div style="display:flex;gap:4px">
-          <button onclick="event.stopPropagation();$('table-modal').classList.remove('v');openSoloView('${p.id}')" style="background:none;border:none;cursor:pointer;color:var(--text);font-size:.72rem;padding:3px 8px;border-radius:6px" title="ver teia individual"><span class="material-symbols-outlined">hub</span></button>
+          <!--<button onclick="event.stopPropagation();$('table-modal').classList.remove('v');openSoloView('${p.id}')" style="background:none;border:none;cursor:pointer;color:var(--text);font-size:.72rem;padding:3px 8px;border-radius:6px" title="ver teia individual"><span class="material-symbols-outlined">hub</span></button>-->
           <button onclick="event.stopPropagation();$('table-modal').classList.remove('v');openEdit('${p.id}')" style="background:none;border:none;cursor:pointer;color:var(--text);font-size:.72rem;padding:3px 8px;border-radius:6px" title="editar"><span class="material-symbols-outlined">edit_square</span></button>
           <button onclick="event.stopPropagation();delPerson('${p.id}');renderTableView(cw())" style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:.8rem;padding:3px 7px;border-radius:6px" title="remover"><span class="material-symbols-outlined">delete</span></button>
         </div>
@@ -489,6 +491,149 @@ function sortTable(field) {
     if (_tvSort.field === field) _tvSort.asc = !_tvSort.asc; else { _tvSort.field = field; _tvSort.asc = field === 'name'; }
     const w = cw(); if (w) renderTableView(w);
     document.querySelectorAll('.tv-th').forEach(th => { const arr = th.querySelector('.sort-arrow'); if (arr) arr.textContent = th.dataset.field === field ? (_tvSort.asc ? '↑' : '↓') : ''; });
+}
+
+/* ══ WEBS TABLE VIEW (GERENCIAR TEIAS) ══════════════════════════════════════════ */
+
+// 1. Vincule o clique do botão que já existe
+if ($('btn-manage-webs')) {
+    $('btn-manage-webs').onclick = openWebsTableView;
+}
+
+// Adicione 'webs-table-modal' na lista de click-outside (se quiser que feche ao clicar fora)
+// (Busque por: ['edit-modal', 'new-web-modal'...].forEach(...) e adicione 'webs-table-modal' na array)
+
+let _websSort = { field: 'pessoas', asc: false };
+
+function openWebsTableView() {
+    if (!myWebs() || myWebs().length === 0) {
+        showToast('Nenhuma teia encontrada.');
+        return;
+    }
+    // Reseta o input de pesquisa
+    if ($('webs-tv-search')) $('webs-tv-search').value = '';
+    $('webs-table-modal').classList.add('v');
+    renderWebsTableView();
+}
+
+function renderWebsTableView() {
+    const tbody = $('webs-tv-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    let websList = [...myWebs()];
+
+    // Filtro de pesquisa por nome
+    const q = ($('webs-tv-search')?.value || '').toLowerCase();
+    if (q) {
+        websList = websList.filter(w => w.name.toLowerCase().includes(q));
+    }
+
+    // Lógica de Ordenação
+    websList.sort((a, b) => {
+        let valA, valB;
+        if (_websSort.field === 'name') {
+            valA = a.name.toLowerCase();
+            valB = b.name.toLowerCase();
+            return _websSort.asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        } else if (_websSort.field === 'pessoas') {
+            valA = a.people ? a.people.length : 0;
+            valB = b.people ? b.people.length : 0;
+        } else if (_websSort.field === 'grupos') {
+            valA = a.groups ? a.groups.length : 0;
+            valB = b.groups ? b.groups.length : 0;
+        } else if (_websSort.field === 'beijos') {
+            valA = a.connections ? a.connections.length : 0;
+            valB = b.connections ? b.connections.length : 0;
+        }
+        return _websSort.asc ? valA - valB : valB - valA;
+    });
+
+    // Renderizar as linhas da tabela
+    websList.forEach(w => {
+        const pessoasCount = w.people ? w.people.length : 0;
+        const gruposCount = w.groups ? w.groups.length : 0;
+        const beijosCount = w.connections ? w.connections.length : 0;
+
+        const tr = document.createElement('tr');
+        tr.className = 'tv-tr'; // Reaproveitando classes de estilo
+
+        // Destaca se for a teia sendo visualizada no momento
+        const isCurrent = S.currentWebId === w.id;
+
+        tr.innerHTML = `
+            <td class="tv-td" style="padding:8px; border-bottom:1px solid var(--line);">
+                <div style="font-weight:600; color:var(--text)">
+                  ${w.name} ${isCurrent ? '<span style="font-size: 0.7rem; color: var(--primary); font-weight: normal; margin-left: 4px;">(atual)</span>' : ''}
+                </div>
+            </td>
+            <td class="tv-td" style="text-align:center; padding:8px; border-bottom:1px solid var(--line);">${pessoasCount}</td>
+            <td class="tv-td" style="text-align:center; padding:8px; border-bottom:1px solid var(--line);">${gruposCount}</td>
+            <td class="tv-td" style="text-align:center; padding:8px; border-bottom:1px solid var(--line);">${beijosCount}</td>
+            <td class="tv-td" style="padding:8px; border-bottom:1px solid var(--line);">
+                <div style="display:flex; gap:4px; justify-content:center">
+                    <button class="btn-icon" style="padding:4px; width:auto; height:auto" title="abrir esta teia" onclick="switchWeb('${w.id}'); $('webs-table-modal').classList.remove('v');">
+                        <span class="material-symbols-outlined" style="font-size:18px">visibility</span>
+                    </button>
+                    <button class="btn-icon" style="padding:4px; width:auto; height:auto; color:var(--danger)" title="excluir teia" onclick="deleteWebFromTable('${w.id}')">
+                        <span class="material-symbols-outlined" style="font-size:18px">delete</span>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // Atualizar contador do rodapé do modal
+    const countEl = $('webs-tv-count');
+    if (countEl) countEl.textContent = `${websList.length} / ${myWebs().length} teia${myWebs().length !== 1 ? 's' : ''}`;
+}
+
+// Função de Ordenação via colunas
+function sortWebsTable(field) {
+    if (_websSort.field === field) {
+        _websSort.asc = !_websSort.asc;
+    } else {
+        _websSort.field = field;
+        _websSort.asc = field === 'name'; // Nome o padrão é A-Z, números o padrão é Maior-Menor
+    }
+
+    renderWebsTableView();
+
+    // Atualizar setinhas visuais nas abas
+    document.querySelectorAll('.webs-tv-th').forEach(th => {
+        const arr = th.querySelector('.sort-arrow');
+        if (arr) {
+            arr.textContent = th.dataset.field === field ? (_websSort.asc ? '↑' : '↓') : '';
+        }
+    });
+}
+
+// Função Auxiliar para excluir teia pela tabela
+function deleteWebFromTable(id) {
+    const w = S.webs.find(x => x.id === id);
+    if (!w) return;
+
+    showConfirm(`Tem certeza que deseja excluir a teia "${w.name}" permanentemente? Isso removerá todas as pessoas e conexões dela.`, () => {
+        S.webs = S.webs.filter(x => x.id !== id);
+
+        // Se a pessoa deletar a teia que estava aberta no momento
+        if (S.currentWebId === id) {
+            S.currentWebId = S.webs.length ? S.webs[0].id : null;
+            if (S.currentWebId) {
+                switchWeb(S.currentWebId);
+            } else {
+                hideAppUI();
+                showNoWebsState(); // Mostra a tela de aplicativo vazio (função que já existe no seu código)
+            }
+        } else {
+            renderTabs(); // Atualiza apenas as tabs caso tenha deletado uma que estava no fundo
+        }
+
+        save();
+        renderWebsTableView(); // Re-renderiza a tabela gerenciadora
+        showToast('Teia excluída com sucesso.');
+    });
 }
 
 /* ══ GROUP MEMBER PICKER ═════════════════════════════════ */
@@ -594,203 +739,362 @@ function renderGroupPicker(w, gid) {
     }
 }
 
-/* ══ SOLO VIEW (enhanced with pan/zoom/download) ════════ */
-let soloSvgData = null; // store nodes for re-render
+// /* ══ SOLO VIEW (enhanced with pan/zoom/download) ════════ */
+// // 1. Use LET em vez de CONST para permitir atualização de dados
+// let soloSvgData = null; 
 
+// // 2. Defina as funções primeiro
+// function openSoloView(pid) {
+//     const w = cw(); if (!w) return;
+//     const p = w.people.find(x => x.id === pid); if (!p) return;
+//     const partners = w.connections.filter(c => c.a === pid || c.b === pid)
+//         .map(c => w.people.find(x => x.id === (c.a === pid ? c.b : c.a))).filter(Boolean);
 
-function openSoloView(pid) {
-    const w = cw(); if (!w) return;
-    const p = w.people.find(x => x.id === pid); if (!p) return;
-    const partners = w.connections.filter(c => c.a === pid || c.b === pid)
-        .map(c => w.people.find(x => x.id === (c.a === pid ? c.b : c.a))).filter(Boolean);
-    $('solo-title').textContent = `${p.name} — ${partners.length} ${partners.length !== 1 ? 'conexões' : 'conexão'}`;
-    soloVx = 0; soloVy = 0; soloVs = 1;
-    soloSvgData = { person: p, partners };
-    renderSoloSvg();
-    $('solo-modal').classList.add('v');
-}
+//     $('solo-title').textContent = `${p.name} — ${partners.length} ${partners.length !== 1 ? 'conexões' : 'conexão'}`;
 
-function renderSoloSvg() {
-    const svg = $('solo-svg'); svg.innerHTML = '';
-    if (!soloSvgData) return;
-    const { person: p, partners } = soloSvgData;
-    const svgEl = svg; const W = svgEl.clientWidth || 520, H = svgEl.clientHeight || 400;
-    const cx = W / 2, cy = H / 2, radius = Math.min(W, H) * 0.28;
+//     soloVx = 0; soloVy = 0; soloVs = 1;
+//     soloSvgData = { person: p, partners }; // Agora funciona porque é 'let'
+//     renderSoloSvg();
+//     $('solo-modal').classList.add('v');
+// }
 
-    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+// function renderSoloSvg() {
+//     const svg = $('solo-svg'); 
+//     if (!svg || !soloSvgData) return;
+//     svg.innerHTML = '';
 
-    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    g.setAttribute('transform', `translate(${soloVx},${soloVy}) scale(${soloVs})`);
+//     const { person: p, partners } = soloSvgData;
+//     const W = svg.clientWidth || 520; 
+//     const H = svg.clientHeight || 400;
+//     const cx = W / 2, cy = H / 2, radius = Math.min(W, H) * 0.35;
 
-    const mkNode = (person, x, y, size) => {
-        const ng = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        ng.setAttribute('transform', `translate(${x},${y})`);
-        const circ = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circ.setAttribute('r', size);
-        circ.setAttribute('fill', person.gender === 'female' ? getCssVar('--female-light') : getCssVar('--male-light'));
-        circ.setAttribute('stroke', person.gender === 'female' ? getCssVar('--female') : getCssVar('--male'));
-        circ.setAttribute('stroke-width', '2.5');
-        ng.appendChild(circ);
-        if (person.photo) {
-            const clipId = 'clip_' + person.id + Math.random().toString(36).slice(2);
-            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-            const clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
-            clipPath.setAttribute('id', clipId);
-            const clipCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            clipCircle.setAttribute('r', size - 1.5); clipCircle.setAttribute('cx', '0'); clipCircle.setAttribute('cy', '0');
-            clipPath.appendChild(clipCircle); defs.appendChild(clipPath); ng.appendChild(defs);
-            const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-            image.setAttribute('x', -size); image.setAttribute('y', -size);
-            image.setAttribute('width', size * 2); image.setAttribute('height', size * 2);
-            image.setAttribute('href', person.photo); image.setAttribute('clip-path', `url(#${clipId})`);
-            ng.appendChild(image);
-        } else {
-            const icon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            icon.setAttribute('x', '0'); icon.setAttribute('y', '0'); icon.setAttribute('text-anchor', 'middle');
-            icon.setAttribute('dominant-baseline', 'middle'); icon.setAttribute('font-size', size * .8);
-            icon.setAttribute('fill', person.gender === 'female' ? getCssVar('--female') : getCssVar('--male'));
-            icon.textContent = person.gender === 'female' ? '♀' : '♂'; ng.appendChild(icon);
-        }
-        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        label.setAttribute('x', '0'); label.setAttribute('y', size + 15); label.setAttribute('text-anchor', 'middle');
-        label.setAttribute('font-size', '11'); label.setAttribute('fill', getCssVar('--text')); label.setAttribute('font-weight', '600');
-        label.textContent = person.name.length > 14 ? person.name.slice(0, 13) + '…' : person.name;
-        ng.appendChild(label); return ng;
-    };
+//     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
 
-    partners.forEach((partner, i) => {
-        const angle = partners.length === 1 ? -Math.PI / 2 : (Math.PI * 2 * i / partners.length) - Math.PI / 2;
-        const x = cx + Math.cos(angle) * radius, y = cy + Math.sin(angle) * radius;
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', cx); line.setAttribute('y1', cy); line.setAttribute('x2', x); line.setAttribute('y2', y);
-        line.setAttribute('stroke', getCssVar('--line')); line.setAttribute('stroke-width', '2'); line.setAttribute('stroke-dasharray', '6 4');
-        g.appendChild(line); g.appendChild(mkNode(partner, x, y, 24));
-    });
-    g.appendChild(mkNode(p, cx, cy, 38));
+//     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+//     g.setAttribute('transform', `translate(${soloVx},${soloVy}) scale(${soloVs})`);
 
-    if (!partners.length) {
-        const nt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        nt.setAttribute('x', cx); nt.setAttribute('y', cy + 72); nt.setAttribute('text-anchor', 'middle');
-        nt.setAttribute('fill', getCssVar('--text-muted')); nt.setAttribute('font-size', '13');
-        nt.textContent = 'nenhuma conexão ainda'; g.appendChild(nt);
-    }
-    svg.appendChild(g);
-}
+//     const mkNode = (person, x, y, size) => {
+//         const ng = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+//         ng.setAttribute('transform', `translate(${x},${y})`);
 
-function soloZoom(d) { soloVs = Math.max(.3, Math.min(3, soloVs * d)); renderSoloSvg(); }
-function soloCenter() { soloVx = 0; soloVy = 0; soloVs = 1; renderSoloSvg(); }
+//         const circ = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+//         circ.setAttribute('r', size);
+//         circ.setAttribute('fill', person.gender === 'female' ? getCssVar('--female-light') : getCssVar('--male-light'));
+//         circ.setAttribute('stroke', person.gender === 'female' ? getCssVar('--female') : getCssVar('--male'));
+//         circ.setAttribute('stroke-width', '3');
+//         ng.appendChild(circ);
 
-const soloSvgEl = $('solo-svg');
-soloSvgEl.addEventListener('mousedown', e => { soloPanning = true; soloPanStart = { x: e.clientX - soloVx, y: e.clientY - soloVy }; soloSvgEl.classList.add('panning'); });
-document.addEventListener('mousemove', e => { if (!soloPanning) return; soloVx = e.clientX - soloPanStart.x; soloVy = e.clientY - soloPanStart.y; renderSoloSvg(); });
-document.addEventListener('mouseup', () => { soloPanning = false; soloSvgEl.classList.remove('panning'); });
-soloSvgEl.addEventListener('wheel', e => { e.preventDefault(); soloZoom(e.deltaY > 0 ? .85 : 1.18); }, { passive: false });
+//         if (person.photo) {
+//             const clipId = 'clip_solo_' + person.id;
+//             const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+//             const clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+//             clipPath.setAttribute('id', clipId);
+//             const clipCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+//             clipCircle.setAttribute('r', size); 
+//             clipPath.appendChild(clipCircle);
+//             defs.appendChild(clipPath);
+//             ng.appendChild(defs);
 
-function getCssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-function svgToPngDataUrl(svgEl, bgColor) {
-    const serializer = new XMLSerializer();
-    let svgStr = serializer.serializeToString(svgEl);
-    const vars = {
-        '--text': getCssVar('--text'),
-        '--text-muted': getCssVar('--text-muted'),
-        '--line': getCssVar('--line'),
-        '--female-light': getCssVar('--female-light'),
-        '--male-light': getCssVar('--male-light'),
-        '--female': getCssVar('--female'),
-        '--male': getCssVar('--male'),
-        '--bg': getCssVar('--bg')
-    };
-    Object.entries(vars).forEach(([k, v]) => { svgStr = svgStr.replace(new RegExp(`var\\(${k.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}\\)`, 'g'), v); });
-    const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
-    return URL.createObjectURL(blob);
-}
-async function soloSvgToCanvas() {
-    const svg = $('solo-svg');
-    const url = svgToPngDataUrl(svg);
-    try {
-        const img = new Image();
-        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
-        const c = document.createElement('canvas');
-        c.width = svg.clientWidth * 2; c.height = svg.clientHeight * 2;
-        const ctx = c.getContext('2d');
-        ctx.scale(2, 2);
-        ctx.fillStyle = getCssVar('--bg');
-        ctx.fillRect(0, 0, c.width, c.height);
-        ctx.drawImage(img, 0, 0);
-        return { canvas: c, url };
-    } catch (err) {
-        URL.revokeObjectURL(url);
-        throw err;
-    }
-}
-async function exportSoloAsImage() {
-    if (!soloSvgData) return;
-    try {
-        const { canvas, url } = await soloSvgToCanvas();
-        const a = document.createElement('a');
-        a.href = canvas.toDataURL('image/png');
-        const pName = soloSvgData?.person?.name || 'solo';
-        a.download = `kissweb-${sanitizeFilename(pName)}.png`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('imagem exportada!');
-    } catch {
-        showToast('falha ao exportar imagem.');
-    }
-}
-async function exportSoloAsPDF() {
-    if (!soloSvgData) return;
-    if (!window.jspdf) { showAlert('bibliotecas não carregadas. tente novamente.'); return; }
-    try {
-        const { canvas, url } = await soloSvgToCanvas();
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width, canvas.height] });
-        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-        const pName = soloSvgData?.person?.name || 'solo';
-        pdf.save(`kissweb-${sanitizeFilename(pName)}.pdf`);
-        URL.revokeObjectURL(url);
-        showToast('pdf exportado!');
-    } catch {
-        showToast('falha ao exportar pdf.');
-    }
-}
-function buildSoloKissData() {
-    const base = cw();
-    const { person, partners } = soloSvgData || {};
-    if (!base || !person) return null;
-    const ids = new Set([person.id, ...partners.map(p => p.id)]);
-    const people = base.people.filter(p => ids.has(p.id)).map(p => ({ ...p, groups: [...(p.groups || [])] }));
-    const connections = base.connections.filter(c => ids.has(c.a) && ids.has(c.b)).map(c => ({ ...c }));
-    const groupIds = new Set();
-    people.forEach(p => (p.groups || []).forEach(gid => groupIds.add(gid)));
-    const groups = base.groups.filter(g => groupIds.has(g.id)).map(g => ({ ...g }));
-    return {
-        id: uid(),
-        name: `${person.name} - teia individual`,
-        ownerId: base.ownerId,
-        people,
-        connections,
-        groups,
-        shared: false,
-        shareId: uid(),
-        sharePassword: '',
-        shareAccess: 'free'
-    };
-}
-function exportSoloAsFile() {
-    const data = buildSoloKissData();
-    if (!data) { showToast('não foi possível gerar o arquivo.'); return; }
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    downloadBlob(blob, `kissweb-${sanitizeFilename(data.name)}.kiss`);
-    showToast('arquivo exportado!');
-}
-function toggleSoloExportMenu() { $('solo-export-menu').classList.toggle('v'); }
-function hideSoloExportMenu() { $('solo-export-menu').classList.remove('v'); }
+//             const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+//             image.setAttribute('x', -size);
+//             image.setAttribute('y', -size);
+//             image.setAttribute('width', size * 2);
+//             image.setAttribute('height', size * 2);
+//             image.setAttribute('href', person.photo);
+//             image.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+//             image.setAttribute('clip-path', `url(#${clipId})`);
+//             ng.appendChild(image);
+//         } else {
+//             const icon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+//             icon.setAttribute('text-anchor', 'middle');
+//             icon.setAttribute('dominant-baseline', 'middle');
+//             icon.setAttribute('font-size', size * 0.9);
+//             icon.setAttribute('fill', person.gender === 'female' ? getCssVar('--female') : getCssVar('--male'));
+//             icon.textContent = person.gender === 'female' ? '♀' : '♂';
+//             ng.appendChild(icon);
+//         }
+
+//         const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+//         label.setAttribute('y', size + 18);
+//         label.setAttribute('text-anchor', 'middle');
+//         label.setAttribute('font-size', '12');
+//         label.setAttribute('fill', getCssVar('--text'));
+//         label.setAttribute('font-weight', 'bold');
+//         label.textContent = person.name;
+//         ng.appendChild(label);
+
+//         return ng;
+//     };
+
+//     partners.forEach((partner, i) => {
+//         const angle = (Math.PI * 2 * i / partners.length) - Math.PI / 2;
+//         const x = cx + Math.cos(angle) * radius;
+//         const y = cy + Math.sin(angle) * radius;
+
+//         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+//         line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+//         line.setAttribute('x2', x);  line.setAttribute('y2', y);
+//         line.setAttribute('stroke', getCssVar('--line'));
+//         line.setAttribute('stroke-width', '2.5');
+//         g.appendChild(line);
+//         g.appendChild(mkNode(partner, x, y, 28));
+//     });
+
+//     g.appendChild(mkNode(p, cx, cy, 45));
+//     svg.appendChild(g);
+// }
+
+// function soloZoom(delta, mouseX, mouseY) {
+//     const scaleFactor = delta > 0 ? 0.9 : 1.1;
+//     const newScale = Math.max(0.2, Math.min(4, soloVs * scaleFactor));
+
+//     if (mouseX !== undefined && mouseY !== undefined) {
+//         const rect = $('solo-svg').getBoundingClientRect();
+//         const x = mouseX - rect.left;
+//         const y = mouseY - rect.top;
+//         soloVx = x - (x - soloVx) * (newScale / soloVs);
+//         soloVy = y - (y - soloVy) * (newScale / soloVs);
+//     }
+//     soloVs = newScale;
+//     renderSoloSvg();
+// }
+
+// function soloCenter() { soloVx = 0; soloVy = 0; soloVs = 1; renderSoloSvg(); }
+
+// // 3. Inicialização dos eventos NO FINAL, garantindo que as funções e elementos existam
+// const soloSvgEl = $('solo-svg');
+// let soloPanning = false;
+// let soloPanStart = { x: 0, y: 0 };
+
+// if (soloSvgEl) {
+//     soloSvgEl.addEventListener('mousedown', e => {
+//         soloPanning = true;
+//         soloPanStart = { x: e.clientX - soloVx, y: e.clientY - soloVy };
+//         soloSvgEl.style.cursor = 'grabbing';
+//     });
+
+//     soloSvgEl.addEventListener('wheel', e => { 
+//         e.preventDefault(); 
+//         soloZoom(e.deltaY, e.clientX, e.clientY); 
+//     }, { passive: false });
+// }
+
+// document.addEventListener('mousemove', e => {
+//     if (!soloPanning) return;
+//     soloVx = e.clientX - soloPanStart.x;
+//     soloVy = e.clientY - soloPanStart.y;
+//     renderSoloSvg();
+// });
+
+// document.addEventListener('mouseup', () => {
+//     soloPanning = false;
+//     if (soloSvgEl) soloSvgEl.style.cursor = 'grab';
+// });
+
+// function getCssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+// function svgToPngDataUrl(svgEl, bgColor) {
+//     const serializer = new XMLSerializer();
+//     let svgStr = serializer.serializeToString(svgEl);
+//     const vars = {
+//         '--text': getCssVar('--text'),
+//         '--text-muted': getCssVar('--text-muted'),
+//         '--line': getCssVar('--line'),
+//         '--female-light': getCssVar('--female-light'),
+//         '--male-light': getCssVar('--male-light'),
+//         '--female': getCssVar('--female'),
+//         '--male': getCssVar('--male'),
+//         '--bg': getCssVar('--bg'),
+//         '--bgbtns': getCssVar('--bgbtns')
+//     };
+//     Object.entries(vars).forEach(([k, v]) => { svgStr = svgStr.replace(new RegExp(`var\\(${k.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}\\)`, 'g'), v); });
+//     const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+//     return URL.createObjectURL(blob);
+// }
+// async function soloSvgToCanvas() {
+//     const svg = $('solo-svg');
+//     const url = svgToPngDataUrl(svg);
+//     try {
+//         const img = new Image();
+//         await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+//         const c = document.createElement('canvas');
+//         c.width = svg.clientWidth * 2; c.height = svg.clientHeight * 2;
+//         const ctx = c.getContext('2d');
+//         ctx.scale(2, 2);
+//         ctx.fillStyle = getCssVar('--bg');
+//         ctx.fillRect(0, 0, c.width, c.height);
+//         ctx.drawImage(img, 0, 0);
+//         return { canvas: c, url };
+//     } catch (err) {
+//         URL.revokeObjectURL(url);
+//         throw err;
+//     }
+// }
+// async function exportSoloAsImage() {
+//     if (!soloSvgData) return;
+//     const svg = $('solo-svg');
+
+//     try {
+//         showToast('Preparando imagem solo...');
+
+//         // 1. Salvar estado original
+//         const originalVx = soloVx;
+//         const originalVy = soloVy;
+//         const originalVs = soloVs;
+
+//         // 2. Calcular limites reais (Bounding Box)
+//         // No SVG Solo, o centro é (W/2, H/2). Vamos encontrar o extremo dos parceiros.
+//         const W = svg.clientWidth || 520;
+//         const H = svg.clientHeight || 400;
+//         const cx = W / 2, cy = H / 2;
+//         const radius = Math.min(W, H) * 0.35;
+
+//         // O limite é basicamente o raio + o tamanho do nó + padding
+//         const nodeSize = 60; // tamanho estimado do nó com nome
+//         const padding = 50;
+
+//         const exportW = (radius * 2) + (nodeSize * 2) + (padding * 2);
+//         const exportH = (radius * 2) + (nodeSize * 2) + (padding * 2);
+
+//         // 3. Centralizar a teia para a captura
+//         // Resetamos o pan/zoom para que o html2canvas pegue o container centralizado
+//         soloVs = 1;
+//         soloVx = (exportW / 2) - cx;
+//         soloVy = (exportH / 2) - cy;
+//         renderSoloSvg();
+
+//         // Ajustar tamanho do container para a foto
+//         const oldW = svg.style.width;
+//         const oldH = svg.style.height;
+//         svg.style.width = exportW + 'px';
+//         svg.style.height = exportH + 'px';
+
+//         await new Promise(r => setTimeout(r, 200));
+
+//         // 4. Capturar
+//         const c = await html2canvas(svg, {
+//             backgroundColor: getCssVar('--bg'),
+//             scale: 2,
+//             width: exportW,
+//             height: exportH,
+//             logging: false,
+//             useCORS: true
+//         });
+
+//         // 5. Restaurar estado original
+//         svg.style.width = oldW;
+//         svg.style.height = oldH;
+//         soloVx = originalVx;
+//         soloVy = originalVy;
+//         soloVs = originalVs;
+//         renderSoloSvg();
+
+//         // Download
+//         const a = document.createElement('a');
+//         a.href = c.toDataURL('image/png');
+//         a.download = `solo-${soloSvgData.person.name.toLowerCase()}.png`;
+//         a.click();
+//         showToast('Imagem exportada!');
+
+//     } catch (e) {
+//         console.error(e);
+//         showToast('Erro ao exportar imagem solo.');
+//     }
+// }
+// async function exportSoloAsPDF() {
+//     if (!soloSvgData || !window.jspdf) { 
+//         showAlert('Biblioteca de PDF não carregada.'); 
+//         return; 
+//     }
+
+//     try {
+//         showToast('Gerando PDF solo...');
+
+//         // Reutilizamos a lógica de medição
+//         const svg = $('solo-svg');
+//         const W = svg.clientWidth || 520;
+//         const H = svg.clientHeight || 400;
+//         const radius = Math.min(W, H) * 0.35;
+//         const exportSize = (radius * 2) + 220; // Espaço suficiente para nós e nomes
+
+//         // Backup
+//         const bkp = { x: soloVx, y: soloVy, s: soloVs, w: svg.style.width, h: svg.style.height };
+
+//         // Ajuste para captura
+//         soloVs = 1;
+//         soloVx = (exportSize / 2) - (W / 2);
+//         soloVy = (exportSize / 2) - (H / 2);
+//         svg.style.width = exportSize + 'px';
+//         svg.style.height = exportSize + 'px';
+//         renderSoloSvg();
+
+//         await new Promise(r => setTimeout(r, 250));
+
+//         const c = await html2canvas(svg, {
+//             backgroundColor: '#ffffff',
+//             scale: 2,
+//             width: exportSize,
+//             height: exportSize
+//         });
+
+//         // Restaurar
+//         svg.style.width = bkp.w;
+//         svg.style.height = bkp.h;
+//         soloVx = bkp.x; soloVy = bkp.y; soloVs = bkp.s;
+//         renderSoloSvg();
+
+//         const imgData = c.toDataURL('image/png');
+//         const pdf = new window.jspdf.jsPDF({
+//             orientation: 'portrait',
+//             unit: 'px',
+//             format: [exportSize, exportSize]
+//         });
+
+//         pdf.addImage(imgData, 'PNG', 0, 0, exportSize, exportSize);
+//         pdf.save(`solo-${soloSvgData.person.name.toLowerCase()}.pdf`);
+//         showToast('PDF exportado!');
+
+//     } catch (e) {
+//         console.error(e);
+//         showToast('Erro ao gerar PDF solo.');
+//     }
+// }
+// function buildSoloKissData() {
+//     const base = cw();
+//     const { person, partners } = soloSvgData || {};
+//     if (!base || !person) return null;
+//     const ids = new Set([person.id, ...partners.map(p => p.id)]);
+//     const people = base.people.filter(p => ids.has(p.id)).map(p => ({ ...p, groups: [...(p.groups || [])] }));
+//     const connections = base.connections.filter(c => ids.has(c.a) && ids.has(c.b)).map(c => ({ ...c }));
+//     const groupIds = new Set();
+//     people.forEach(p => (p.groups || []).forEach(gid => groupIds.add(gid)));
+//     const groups = base.groups.filter(g => groupIds.has(g.id)).map(g => ({ ...g }));
+//     return {
+//         id: uid(),
+//         name: `${person.name}`,
+//         ownerId: base.ownerId,
+//         people,
+//         connections,
+//         groups,
+//         shared: false,
+//         shareId: uid(),
+//         sharePassword: '',
+//         shareAccess: 'free'
+//     };
+// }
+// function exportSoloAsFile() {
+//     const data = buildSoloKissData();
+//     if (!data) { showToast('não foi possível gerar o arquivo.'); return; }
+//     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+//     downloadBlob(blob, `kissweb-${sanitizeFilename(data.name)}.kiss`);
+//     showToast('arquivo exportado!');
+// }
+// function toggleSoloExportMenu() { $('solo-export-menu').classList.toggle('v'); }
+// function hideSoloExportMenu() { $('solo-export-menu').classList.remove('v'); }
 
 /* ══ THEMES ══════════════════════════════════════════════ */
 const THEMES = {
-    claro: { bg: '#f7f5f2', surface: '#ffffff', text: '#1a1a1a', textMuted: 'rgba(136,136,136,0.8)', accent: '#ff4d6d', male: '#4a90d9', female: '#e8608a', border: '#e8e4df', nameBg: 'rgba(255,255,255,0.9)', nameText: '#1a1a1a' },
-    escuro: { bg: '#0f0f12', surface: '#1a1a20', text: '#e8e4df', textMuted: 'rgba(232,228,223,0.7)', accent: '#ff4d6d', male: '#5ba3f5', female: '#f07ab0', border: '#2a2a35', nameBg: '#242430', nameText: '#e8e4df' },
+    claro: { bg: '#f7f5f2', surface: '#ffffff', text: '#1a1a1a', textMuted: 'rgba(136,136,136,0.8)', accent: '#ff4d6d', male: '#4a90d9', female: '#e8608a', border: '#e8e4df', nameBg: 'rgba(255,255,255,0.9)', nameText: '#1a1a1a', bgbtns: '#0c0c0c' },
+    escuro: { bg: '#0f0f12', surface: '#1a1a20', text: '#e8e4df', textMuted: 'rgba(232,228,223,0.7)', accent: '#ff4d6d', male: '#5ba3f5', female: '#f07ab0', border: '#2a2a35', nameBg: '#242430', nameText: '#e8e4df', bgbtns: '#ebebeb' },
 };
 function applyTheme(name) {
     const t = THEMES[name] || THEMES.claro; _currentTheme = name;
@@ -802,6 +1106,7 @@ function applyTheme(name) {
     r.setProperty('--accent-soft', t.accent + '22');
     r.setProperty('--line', 'rgba(180,180,180,0.4)'); r.setProperty('--line-active', t.accent);
     r.setProperty('--name-bg', t.nameBg); r.setProperty('--name-text', t.nameText);
+    r.setProperty('--bgbtns', t.bgbtns);
     localStorage.setItem('kw_theme', name); updateThemeIcon();
 }
 function toggleTheme() { applyTheme(_currentTheme === 'claro' ? 'escuro' : 'claro'); }
@@ -883,13 +1188,13 @@ function renderPanel() {
     <div class="stat-card"><div class="stat-num" style="color:var(--male)">${m}</div><div class="stat-label">homens</div></div>
     <div class="stat-card"><div class="stat-num" style="color:var(--female)">${f}</div><div class="stat-label">mulheres</div></div>`;
     // group stats
-    const gs2 = $('group-stats'); gs2.innerHTML = '';
-    w.groups.forEach(g => {
-        const mem = w.people.filter(p => p.groups && p.groups.includes(g.id)), c = connInGroup(w, g.id);
-        const row = document.createElement('div'); row.className = 'group-item';
-        row.innerHTML = `<div class="group-dot" style="background:${g.color}"></div><div class="group-name">${g.name}</div><div class="group-count">${c}/${mem.length} beijou</div>`;
-        gs2.appendChild(row);
-    });
+    // const gs2 = $('group-stats'); gs2.innerHTML = '';
+    // w.groups.forEach(g => {
+    //     const mem = w.people.filter(p => p.groups && p.groups.includes(g.id)), c = connInGroup(w, g.id);
+    //     const row = document.createElement('div'); row.className = 'group-item';
+    //     row.innerHTML = `<div class="group-dot" style="background:${g.color}"></div><div class="group-name">${g.name}</div><div class="group-count">${c}/${mem.length} beijou</div>`;
+    //     gs2.appendChild(row);
+    // });
     // people list
     const pl = $('people-list'); pl.innerHTML = '';
     const sortedPeople = [...w.people].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
@@ -942,11 +1247,11 @@ function addPerson() {
     const cy = (wrap.clientHeight / 2 - vy) / vscale + (Math.random() - .5) * 130;
     const p = {
         id: uid(), name, gender: selGenderVal, photo: addPhoto, groups, x: cx, y: cy,
-    // fisica:
-    vx: 0, 
-    vy: 0, 
-    fx: 0, 
-    fy: 0
+        // fisica:
+        vx: 0,
+        vy: 0,
+        fx: 0,
+        fy: 0
     };
     w.people.push(p); save();
     const el = makeNode(p); el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
@@ -1048,7 +1353,7 @@ document.addEventListener('click', e => {
 
 $('ctx-connect').onclick = () => { const id = ctxId; hideCtx(); if (id) startConn(id); };
 $('ctx-edit').onclick = () => { const id = ctxId; hideCtx(); if (id) openEdit(id); };
-$('ctx-solo').onclick = () => { const id = ctxId; hideCtx(); if (id) openSoloView(id); };
+//$('ctx-solo').onclick = () => { const id = ctxId; hideCtx(); if (id) openSoloView(id); }; removido indeterminadamente, talvez volte no futuro
 $('ctx-delete').onclick = () => { const id = ctxId; hideCtx(); if (id) delPerson(id); };
 $('web-ctx-rename').onclick = () => { hideWebCtx(); const w = S.webs.find(w => w.id === window._webCtxId); if (w) showInput('', w.name, n => { if (n && n.trim()) { w.name = n.trim(); save(); renderTabs(); } }); };
 $('web-ctx-delete').onclick = () => { hideWebCtx(); confirmDeleteWeb(window._webCtxId); };
@@ -1171,20 +1476,61 @@ function applyZoom(d) {
     vx = cx - (cx - vx) * (ns / vscale); vy = cy - (cy - vy) * (ns / vscale); vscale = ns;
     canvasEl.style.transform = `translate(${vx}px,${vy}px) scale(${vscale})`;
 }
-$('btn-center').onclick = () => {
+$('btn-center').onclick = () =>  centerWeb();
+function centerWeb() {
     const w = isShared ? sharedData : cw();
-    if (!w || !w.people.length) { vx = 0; vy = 0; vscale = 1; canvasEl.style.transform = 'translate(0,0) scale(1)'; return; }
-    const xs = w.people.map(p => p.x), ys = w.people.map(p => p.y);
-    const cx2 = (Math.min(...xs) + Math.max(...xs)) / 2, cy2 = (Math.min(...ys) + Math.max(...ys)) / 2;
-    vx = wrap.clientWidth / 2 - cx2 * vscale; vy = wrap.clientHeight / 2 - cy2 * vscale;
+    if (!w || !w.people.length) {
+        vx = 0; vy = 0; vscale = 1;
+        canvasEl.style.transform = 'translate(0,0) scale(1)';
+        return;
+    }
+
+    // 1. Encontrar os limites extremos (mínimos e máximos)
+    const xs = w.people.map(p => p.x);
+    const ys = w.people.map(p => p.y);
+
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    // 2. Calcular largura e altura da teia (adicionando margem para o tamanho dos nós)
+    const nodeMargin = 100; // Espaço extra para não cortar as fotos/nomes nas bordas
+    const webWidth = (maxX - minX) + (nodeMargin * 2);
+    const webHeight = (maxY - minY) + (nodeMargin * 2);
+
+    // 3. Calcular o zoom necessário para caber no container (wrap)
+    const padding = 40; // Margem de segurança da borda da tela
+    const availableW = wrap.clientWidth - padding;
+    const availableH = wrap.clientHeight - padding;
+
+    // O zoom será o menor valor entre a proporção de largura e altura
+    let newScale = Math.min(availableW / webWidth, availableH / webHeight);
+
+    // Limitar o zoom máximo para 1 (não dar zoom excessivo se houver poucas pessoas)
+    // E limitar o mínimo para não ficar invisível
+    vscale = Math.max(0.15, Math.min(1, newScale));
+
+    // 4. Calcular o centro real da teia
+    const webCenterX = (minX + maxX) / 2;
+    const webCenterY = (minY + maxY) / 2;
+
+    // 5. Posicionar no centro do wrap considerando o novo zoom
+    vx = (wrap.clientWidth / 2) - (webCenterX * vscale);
+    vy = (wrap.clientHeight / 2) - (webCenterY * vscale);
+
+    // 6. Aplicar e Renderizar
     canvasEl.style.transform = `translate(${vx}px,${vy}px) scale(${vscale})`;
+
+    // Se você tiver uma função que desenha as linhas, chame-a aqui para garantir nitidez
+    if (typeof renderCanvas === 'function') renderCanvas();
 };
 
 /* ══ PANEL TOGGLE ════════════════════════════════════════ */
 function togglePanel() {
     const p = $('panel'), b = $('panel-toggle');
-    p.classList.toggle('open'); 
-    b.textContent = p.classList.contains('open') ? '▶' : '◀'; 
+    p.classList.toggle('open');
+    b.textContent = p.classList.contains('open') ? '▶' : '◀';
 }
 $('panel-toggle').onclick = togglePanel;
 $('btn-toggle-panel').onclick = togglePanel;
@@ -1215,56 +1561,56 @@ $('new-web-create').onclick = () => {
 };
 $('new-web-name').addEventListener('keydown', e => { if (e.key === 'Enter') $('new-web-create').click(); });
 
-/* ══ SHARE ════════════════════════════════════════════════ */
-$('btn-share').onclick = () => { hideWebCtx();const w = cw(); if (!w) return; updateShareUI(w); $('share-modal').classList.add('v'); };
-function updateShareUI(w) {
-    const on = w.shared; $('share-toggle').classList.toggle('on', on);
-    $('share-on').style.display = on ? 'block' : 'none'; $('share-off').style.display = on ? 'none' : 'block';
-    if (on) { $('share-link-inp').value = window.location.href.split('?')[0] + `?share=${w.shareId}`; }
-    $('acc-free').classList.toggle('active', w.shareAccess !== 'password');
-    $('acc-pw').classList.toggle('active', w.shareAccess === 'password');
-    $('share-pw-sec').classList.toggle('v', w.shareAccess === 'password');
-    $('share-info').textContent = w.shareAccess === 'password' ? 'quem acessar precisará digitar a senha.' : 'qualquer pessoa com o link pode visualizar (somente leitura).';
-}
-function toggleShare() { const w = cw(); w.shared = !w.shared; persistShare(w); save(); updateShareUI(w); }
-function setAccess(m) { const w = cw(); w.shareAccess = m; persistShare(w); save(); updateShareUI(w); }
-function savePw() { const w = cw(); w.sharePassword = $('share-pw-inp').value; persistShare(w); save(); showToast('senha salva!'); }
-function copyLink() { navigator.clipboard.writeText($('share-link-inp').value).then(() => { const b = $('copy-btn'); b.textContent = '✓ copiado!'; b.classList.add('copied'); setTimeout(() => { b.textContent = 'copiar'; b.classList.remove('copied'); }, 2000); }); }
-function persistShare(w) {
-    const ownerName = w.ownerId === 'guest' ? 'visitante' : (S.users.find(u => u.id === w.ownerId) || { name: 'alguém' }).name;
-    const snap = { id: w.id, name: w.name, ownerName, people: w.people, connections: w.connections, groups: w.groups, shared: w.shared, shareId: w.shareId, sharePassword: w.sharePassword, shareAccess: w.shareAccess };
-    localStorage.setItem(`kwsh_${w.shareId}`, JSON.stringify(snap));
-}
+// /* ══ SHARE ════════════════════════════════════════════════ */
+// $('btn-share').onclick = () => { hideWebCtx();const w = cw(); if (!w) return; updateShareUI(w); $('share-modal').classList.add('v'); };
+// function updateShareUI(w) {
+//     const on = w.shared; $('share-toggle').classList.toggle('on', on);
+//     $('share-on').style.display = on ? 'block' : 'none'; $('share-off').style.display = on ? 'none' : 'block';
+//     if (on) { $('share-link-inp').value = window.location.href.split('?')[0] + `?share=${w.shareId}`; }
+//     $('acc-free').classList.toggle('active', w.shareAccess !== 'password');
+//     $('acc-pw').classList.toggle('active', w.shareAccess === 'password');
+//     $('share-pw-sec').classList.toggle('v', w.shareAccess === 'password');
+//     $('share-info').textContent = w.shareAccess === 'password' ? 'quem acessar precisará digitar a senha.' : 'qualquer pessoa com o link pode visualizar (somente leitura).';
+// }
+// function toggleShare() { const w = cw(); w.shared = !w.shared; persistShare(w); save(); updateShareUI(w); }
+// function setAccess(m) { const w = cw(); w.shareAccess = m; persistShare(w); save(); updateShareUI(w); }
+// function savePw() { const w = cw(); w.sharePassword = $('share-pw-inp').value; persistShare(w); save(); showToast('senha salva!'); }
+// function copyLink() { navigator.clipboard.writeText($('share-link-inp').value).then(() => { const b = $('copy-btn'); b.textContent = '✓ copiado!'; b.classList.add('copied'); setTimeout(() => { b.textContent = 'copiar'; b.classList.remove('copied'); }, 2000); }); }
+// function persistShare(w) {
+//     const ownerName = w.ownerId === 'guest' ? 'visitante' : (S.users.find(u => u.id === w.ownerId) || { name: 'alguém' }).name;
+//     const snap = { id: w.id, name: w.name, ownerName, people: w.people, connections: w.connections, groups: w.groups, shared: w.shared, shareId: w.shareId, sharePassword: w.sharePassword, shareAccess: w.shareAccess };
+//     localStorage.setItem(`kwsh_${w.shareId}`, JSON.stringify(snap));
+// }
 
-function checkSharedLink() {
-    const p = new URLSearchParams(window.location.search).get('share'); if (!p) return false;
-    const raw = localStorage.getItem(`kwsh_${p}`); if (!raw) { showAlert('link inválido ou desativado.'); return false; }
-    const data = JSON.parse(raw); if (!data.shared) { showAlert('esta teia não está mais compartilhada.'); return false; }
-    if (data.shareAccess === 'password' && data.sharePassword) {
-        sharedData = data; const overlay = $('auth-overlay');
+// function checkSharedLink() {
+//     const p = new URLSearchParams(window.location.search).get('share'); if (!p) return false;
+//     const raw = localStorage.getItem(`kwsh_${p}`); if (!raw) { showAlert('link inválido ou desativado.'); return false; }
+//     const data = JSON.parse(raw); if (!data.shared) { showAlert('esta teia não está mais compartilhada.'); return false; }
+//     if (data.shareAccess === 'password' && data.sharePassword) {
+//         sharedData = data; const overlay = $('auth-overlay');
 
-        if (overlay) {
-            overlay.classList.add('hidden');
-        } $('pw-gate').classList.add('v'); return true;
-    }
-    loadShared(data); return true;
-}
-function checkGate() {
-    const v = $('gate-pw').value;
-    if (v === sharedData.sharePassword) { $('pw-gate').classList.remove('v'); loadShared(sharedData); }
-    else { showErr('gate-err', 'senha incorreta. tente novamente.'); $('gate-pw').value = ''; }
-}
-function cancelGate() { $('pw-gate').classList.remove('v'); window.history.replaceState({}, '', window.location.pathname); $('auth-overlay').classList.remove('hidden'); }
-function loadShared(data) {
-    isShared = true; sharedData = data; selectedPersonId = null; $('auth-overlay').classList.add('hidden');
-    ['topbar', 'canvas-wrap', 'zoom-controls'].forEach(id => $(id).style.display = '');
-    $('empty-state').style.display = ''; $('panel').style.display = 'none'; $('panel-toggle').style.display = 'none';
-    ['btn-new-web', 'btn-share', 'btn-toggle-panel', 'btn-batch-add'/*, 'btn-auto-layout'*/].forEach(id => $(id).style.display = 'none');
-    $('shared-owner').textContent = data.ownerName; $('shared-banner').classList.add('v');
-    $('canvas-wrap').style.top = '94px'; $('uname').textContent = 'visualizando'; $('ua').textContent = 'V';
-    data.people.forEach(p => { const el = makeNode(p); el.style.left = p.x + 'px'; el.style.top = p.y + 'px'; canvasEl.appendChild(el); nodeEls[p.id] = el; });
-    renderLines(data); updateEmpty();
-}
+//         if (overlay) {
+//             overlay.classList.add('hidden');
+//         } $('pw-gate').classList.add('v'); return true;
+//     }
+//     loadShared(data); return true;
+// }
+// function checkGate() {
+//     const v = $('gate-pw').value;
+//     if (v === sharedData.sharePassword) { $('pw-gate').classList.remove('v'); loadShared(sharedData); }
+//     else { showErr('gate-err', 'senha incorreta. tente novamente.'); $('gate-pw').value = ''; }
+// }
+// function cancelGate() { $('pw-gate').classList.remove('v'); window.history.replaceState({}, '', window.location.pathname); $('auth-overlay').classList.remove('hidden'); }
+// function loadShared(data) {
+//     isShared = true; sharedData = data; selectedPersonId = null; $('auth-overlay').classList.add('hidden');
+//     ['topbar', 'canvas-wrap', 'zoom-controls'].forEach(id => $(id).style.display = '');
+//     $('empty-state').style.display = ''; $('panel').style.display = 'none'; $('panel-toggle').style.display = 'none';
+//     ['btn-new-web', 'btn-share', 'btn-toggle-panel', 'btn-batch-add'/*, 'btn-auto-layout'*/].forEach(id => $(id).style.display = 'none');
+//     $('shared-owner').textContent = data.ownerName; $('shared-banner').classList.add('v');
+//     $('canvas-wrap').style.top = '94px'; $('uname').textContent = 'visualizando'; $('ua').textContent = 'V';
+//     data.people.forEach(p => { const el = makeNode(p); el.style.left = p.x + 'px'; el.style.top = p.y + 'px'; canvasEl.appendChild(el); nodeEls[p.id] = el; });
+//     renderLines(data); updateEmpty();
+// toda a parte de compartilhamento foi removida indeterminadamente, pode ser reimplementada mais tarde se houver demanda}
 
 /* ══ EXPORT / IMPORT ═════════════════════════════════════ */
 function toggleExportMenu() {
@@ -1280,130 +1626,140 @@ function hideSoloExportMenu() { $('solo-export-menu').classList.remove('v'); }
 async function exportWebAsImage() {
     const w = cw();
     if (!w || w.people.length === 0) return;
-    if (typeof html2canvas === 'undefined') { showAlert('Biblioteca não carregada.'); return; }
+    if (typeof html2canvas === 'undefined') { showAlert('Biblioteca html2canvas não carregada.'); return; }
 
     try {
-        showToast('Enquadrando teia...');
+        showToast('Preparando imagem...');
 
-        // 1. Calcular os limites reais (Bounding Box)
+        // 1. Salvar estado original para restaurar depois
+        const originalTransform = canvasEl.style.transform;
+        const originalWidth = canvasEl.style.width;
+        const originalHeight = canvasEl.style.height;
+
+        // 2. Calcular os limites REAIS de todos os elementos
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
         w.people.forEach(p => {
             const el = nodeEls[p.id];
+            // Pegamos o tamanho real do elemento (círculo + nome abaixo)
             const nW = el ? el.offsetWidth : 80;
-            const nH = el ? el.offsetHeight : 80;
-            minX = Math.min(minX, p.x);
-            minY = Math.min(minY, p.y);
-            maxX = Math.max(maxX, p.x + nW);
-            maxY = Math.max(maxY, p.y + nH);
+            const nH = el ? el.offsetHeight : 120; // 120 para incluir o nome
+
+            minX = Math.min(minX, p.x - (nW / 2));
+            minY = Math.min(minY, p.y - (nH / 2));
+            maxX = Math.max(maxX, p.x + (nW / 2));
+            maxY = Math.max(maxY, p.y + (nH / 2));
         });
 
-        const padding = 100;
+        const padding = 60;
         const exportW = (maxX - minX) + (padding * 2);
         const exportH = (maxY - minY) + (padding * 2);
 
-        // 2. REPOSICIONAR E "CONGELAR" (Como você pediu, ele não volta ao que era)
-        vx = -minX + padding;
-        vy = -minY + padding;
-        vscale = 1; 
-        renderCanvas();
-
-        // 3. O SEGREDO: Forçar o canvasEl a ter o tamanho total da teia
-        // Isso impede que o CSS "overflow: hidden" do pai corte a imagem
-        const originalWidth = canvasEl.style.width;
-        const originalHeight = canvasEl.style.height;
-        const originalPosition = canvasEl.style.position;
-
+        // 3. Preparar o canvas para captura: 
+        // Removemos o zoom/pan e forçamos o tamanho total da teia
+        canvasEl.style.transform = 'none';
         canvasEl.style.width = exportW + 'px';
         canvasEl.style.height = exportH + 'px';
-        canvasEl.style.position = 'relative'; // Garante que o html2canvas veja o ponto 0,0 corretamente
 
-        // Pequeno delay para o DOM atualizar o novo tamanho
-        await new Promise(r => setTimeout(r, 200));
+        // Movemos os nós internamente para caberem no novo tamanho (offset)
+        const offX = -minX + padding;
+        const offY = -minY + padding;
 
-        showToast('Gerando arquivo...');
-
-        const c = await html2canvas(canvasEl, {
-            backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg') || '#f7f5f2',
-            scale: 2,
-            useCORS: true,
-            // x: 0 e y: 0 agora funcionam porque o canvasEl tem o tamanho exato da teia
-            x: 0,
-            y: 0,
-            width: exportW,
-            height: exportH,
-            // Estas duas linhas abaixo corrigem o problema de cortar o topo/lateral
-            scrollX: 0,
-            scrollY: -window.scrollY 
+        w.people.forEach(p => {
+            const el = nodeEls[p.id];
+            if (el) {
+                el.style.left = (p.x + offX) + 'px';
+                el.style.top = (p.y + offY) + 'px';
+            }
         });
 
-        // 4. Restaurar apenas o estilo de tamanho (a posição vx/vy continua nova)
+        // Renderiza as linhas na nova posição
+        renderLines({ ...w, people: w.people.map(p => ({ ...p, x: p.x + offX, y: p.y + offY })) });
+
+        // Pequeno delay para o navegador processar o reposicionamento
+        await new Promise(r => setTimeout(r, 200));
+
+        const c = await html2canvas(canvasEl, {
+            backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#f7f5f2',
+            scale: 2, // Alta qualidade
+            useCORS: true,
+            logging: false,
+            width: exportW,
+            height: exportH
+        });
+
+        // 4. RESTAURAR TUDO ao que era antes
+        canvasEl.style.transform = originalTransform;
         canvasEl.style.width = originalWidth;
         canvasEl.style.height = originalHeight;
-        canvasEl.style.position = originalPosition;
+        renderCanvas(); // Isso volta os nós e linhas para o lugar certo
 
         const url = c.toDataURL('image/png');
         const a = document.createElement('a');
         a.href = url;
-        a.download = `kissweb-${sanitizeFilename(w.name)}.png`;
+        a.download = `kissweb-${w.name.replace(/\s+/g, '-').toLowerCase()}.png`;
         a.click();
         showToast('Imagem exportada!');
 
     } catch (e) {
         console.error(e);
-        showToast('Erro ao exportar.');
+        showToast('Erro ao exportar imagem.');
     }
 }
 
 async function exportWebAsPDF() {
     const w = cw();
     if (!w || w.people.length === 0) return;
-    if (!window.jspdf) { showAlert('PDF lib não carregada.'); return; }
+    if (!window.jspdf) { showAlert('Biblioteca jsPDF não carregada.'); return; }
 
     try {
-        showToast('Enquadrando teia para PDF...');
+        showToast('Gerando PDF...');
 
+        // Mesma lógica de cálculo de limites da imagem
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         w.people.forEach(p => {
             const el = nodeEls[p.id];
             const nW = el ? el.offsetWidth : 80;
-            const nH = el ? el.offsetHeight : 80;
-            minX = Math.min(minX, p.x);
-            minY = Math.min(minY, p.y);
-            maxX = Math.max(maxX, p.x + nW);
-            maxY = Math.max(maxY, p.y + nH);
+            const nH = el ? el.offsetHeight : 120;
+            minX = Math.min(minX, p.x - (nW / 2));
+            minY = Math.min(minY, p.y - (nH / 2));
+            maxX = Math.max(maxX, p.x + (nW / 2));
+            maxY = Math.max(maxY, p.y + (nH / 2));
         });
 
-        const padding = 100;
+        const padding = 50;
         const exportW = (maxX - minX) + (padding * 2);
         const exportH = (maxY - minY) + (padding * 2);
 
-        vx = -minX + padding;
-        vy = -minY + padding;
-        vscale = 1;
-        renderCanvas();
+        // Backup e Reset
+        const originalTransform = canvasEl.style.transform;
+        canvasEl.style.transform = 'none';
 
-        const originalWidth = canvasEl.style.width;
-        const originalHeight = canvasEl.style.height;
+        const offX = -minX + padding;
+        const offY = -minY + padding;
 
-        canvasEl.style.width = exportW + 'px';
-        canvasEl.style.height = exportH + 'px';
+        // Reposiciona temporariamente
+        w.people.forEach(p => {
+            const el = nodeEls[p.id];
+            if (el) {
+                el.style.left = (p.x + offX) + 'px';
+                el.style.top = (p.y + offY) + 'px';
+            }
+        });
+        renderLines({ ...w, people: w.people.map(p => ({ ...p, x: p.x + offX, y: p.y + offY })) });
 
         await new Promise(r => setTimeout(r, 200));
 
         const c = await html2canvas(canvasEl, {
             backgroundColor: '#ffffff',
             scale: 2,
-            useCORS: true,
-            x: 0,
-            y: 0,
             width: exportW,
-            height: exportH,
-            scrollX: 0,
-            scrollY: -window.scrollY
+            height: exportH
         });
 
-        canvasEl.style.width = originalWidth;
-        canvasEl.style.height = originalHeight;
+        // Restaura original
+        canvasEl.style.transform = originalTransform;
+        renderCanvas();
 
         const imgData = c.toDataURL('image/png');
         const pdf = new window.jspdf.jsPDF({
@@ -1413,11 +1769,11 @@ async function exportWebAsPDF() {
         });
 
         pdf.addImage(imgData, 'PNG', 0, 0, exportW, exportH);
-        pdf.save(`kissweb-${sanitizeFilename(w.name)}.pdf`);
-        showToast('PDF exportado!');
+        pdf.save(`kissweb-${w.name.replace(/\s+/g, '-').toLowerCase()}.pdf`);
+        showToast('PDF pronto!');
     } catch (e) {
         console.error(e);
-        showToast('Erro no PDF.');
+        showToast('Erro ao gerar PDF.');
     }
 }
 function exportWebAsFile() {
@@ -1447,9 +1803,9 @@ $('btn-export').onclick = toggleExportMenu;
 $('export-img').onclick = () => { hideExportMenu(); exportWebAsImage(); };
 $('export-pdf').onclick = () => { hideExportMenu(); exportWebAsPDF(); };
 $('export-file').onclick = () => { hideExportMenu(); exportWebAsFile(); };
-const triggerImport = () => { 
-    if (typeof hideExportMenu === 'function') hideExportMenu(); 
-    $('import-file').click(); 
+const triggerImport = () => {
+    if (typeof hideExportMenu === 'function') hideExportMenu();
+    $('import-file').click();
 };
 if ($('import-file-btn')) {
     $('import-file-btn').onclick = triggerImport;
@@ -1459,10 +1815,11 @@ if ($('import-first-file-btn')) {
 }
 $('import-file').addEventListener('change', handleImportFile);
 //$('btn-import').onclick = () => $('import-file').click();; removido pois foi integrado ao menu de exportação, pode ser refeito mais tarde se houver demanda
-$('solo-export-btn').onclick = e => { e.stopPropagation(); toggleSoloExportMenu(); };
-$('solo-export-img').onclick = () => { hideSoloExportMenu(); exportSoloAsImage(); };
-$('solo-export-pdf').onclick = () => { hideSoloExportMenu(); exportSoloAsPDF(); };
-$('solo-export-file').onclick = () => { hideSoloExportMenu(); exportSoloAsFile(); };
+// $('solo-export-btn').onclick = e => { e.stopPropagation(); toggleSoloExportMenu(); };
+// $('solo-export-img').onclick = () => { hideSoloExportMenu(); exportSoloAsImage(); };
+// $('solo-export-pdf').onclick = () => { hideSoloExportMenu(); exportSoloAsPDF(); };
+// $('solo-export-file').onclick = () => { hideSoloExportMenu(); exportSoloAsFile(); };
+//botoes de solo exportados foram removidos indeterminadamente, podem ser refeitos mais tarde se houver demanda
 
 /* ══ BUTTONS ══════════════════════════════════════════════ */
 $('btn-add-person').onclick = addPerson;
@@ -1471,14 +1828,17 @@ $('btn-add-group').onclick = addGroup;
 $('inp-gname').addEventListener('keydown', e => { if (e.key === 'Enter') addGroup(); });
 //$('btn-auto-layout').onclick = autoLayout; organizar automaticamente retirado temporariamente, pode ser refeito mais tarde se houver demanda e melhorado
 $('btn-table-view').onclick = openTableView;
+$('btn-manage-webs').onclick = openWebsTableView;
 //$('btn-batch-add').onclick = openBatchAdd; adicionar em lote retirado temporariamente
 $('btn-theme').onclick = toggleTheme;
 
 // modal click-outside
-['edit-modal', 'new-web-modal', 'share-modal', 'user-modal', 'alert-modal', 'confirm-modal',
-    'input-modal', 'search-modal', /*'batch-modal',*/ 'group-picker-modal', 'solo-modal'].forEach(id => {
+['edit-modal', 'new-web-modal', /*'share-modal',*/ 'user-modal', 'alert-modal', 'confirm-modal',
+    'input-modal', 'search-modal', /*'batch-modal',*/ 'group-picker-modal', /*'solo-modal'*/].forEach(id => {
         $(id).addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('v'); });
     }); //batch modal/adicionar em lote retirado temporariamente
+//solo modal retirado indeterminadamente, pode ser refeito mais tarde se houver demanda
+//share modal retirado indeterminadamente, pode ser refeito mais tarde se houver demanda
 
 /* ══ INIT ════════════════════════════════════════════════ */
 function init() {
@@ -1486,7 +1846,7 @@ function init() {
     S.currentUser = { guest: true, name: 'visitante' };
     const savedTheme = localStorage.getItem('kw_theme');
     applyTheme(savedTheme && THEMES[savedTheme] ? savedTheme : 'claro');
-    if (checkSharedLink()) return;
+    //if (checkSharedLink()) return;
     if (!S.currentUser) doGuest();
     else enterApp();
 }
