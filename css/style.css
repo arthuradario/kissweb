@@ -433,7 +433,6 @@ body {
 }
 
 .btn-new-web {
-    margin-left: 12px;
     width: 38px;
     height: 38px;
     border-radius: 50%;
@@ -444,7 +443,12 @@ body {
     align-items: center;
     justify-content: center;
     transition: all .15s;
-    flex-shrink: 0;
+}
+
+.btn-new-web-empty{
+    width: 48px;
+    height: 48px;
+    margin-top: 10px;
 }
 
 .btn-new-web:hover {
@@ -916,8 +920,39 @@ svg#lines {
     transition: border-color .15s;
 }
 
-#inp-gcolor {
+/* Container que segura os dois */
+.color-picker-wrapper {
+    position: relative;
     height: auto;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* O seu input (ajustado) */
+#inp-gcolor {
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    background: none;
+}
+
+#inp-gcolor::-webkit-color-swatch {
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+}
+
+.color-icon {
+    position: absolute;
+    /* O SEGREDO: faz o clique "atravessar" o ícone e acertar o input embaixo */
+    pointer-events: none; 
+    color: white; /* Cor do baldinho */
+    font-size: 20px;
+    /* Sombra opcional para o ícone aparecer em cores claras */
+    text-shadow: 0px 0px 3px rgba(0,0,0,0.3); 
 }
 
 .form-input:focus,
@@ -1716,6 +1751,16 @@ textarea {
     z-index: 90;
 }
 
+#btn-shuffle {
+    position: fixed;
+    bottom: 22px;
+    left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 90;
+}
+
 .zoom-btn {
     width: 40px;
     height: 40px;
@@ -1749,6 +1794,10 @@ textarea {
     border-color: var(--accent);
 }
 
+#btn-shuffle {
+    margin-left: 50px;
+}
+
 /* ══ EMPTY / NO-WEBS ══ */
 #empty-state,
 #no-webs-state {
@@ -1757,12 +1806,25 @@ textarea {
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
+    align-items: center;
+    justify-content: center;
     z-index: 5;
     transition: opacity .3s;
 }
 
 #empty-state {
     pointer-events: none;
+}
+
+#import-file-btn * {
+    pointer-events: none; /* Garante que o clique passe pelo ícone e chegue no botão */
+}
+
+#btns-no-webs {
+    gap: 20px;
+    display: flex;
+    justify-content: center;
+    margin-top: 14px;
 }
 
 #empty-state .big,
@@ -2098,3 +2160,4 @@ input::placeholder {
     color: var(--text-muted);
     opacity: .8;
 }
+

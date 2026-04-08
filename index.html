@@ -13,6 +13,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="css/style.css" rel="stylesheet">
   <script src="js/script.js" defer></script>
+  <script src="js/fisica.js"></script>
 </head>
 
 <body>
@@ -47,17 +48,17 @@
       <img id="btn-logo-webs" src="assets/svg/kissweblogo.svg">
     </button>
     <div class="web-tabs" id="web-tabs"></div>
-    <button class="btn-new-web" id="btn-new-web" title="nova teia">
+    <button class="btn-new-web" id="btn-new-web" title="nova teia" style="display:none">
       <span class="material-symbols-outlined icone-adicionar">
         add_circle
       </span>
     </button>
     <div class="topbar-actions">
-      <button class="btn-icon" id="btn-shared-webs" title="teias compartilhadas">
+      <!-- <button class="btn-icon" id="btn-shared-webs" title="teias compartilhadas">
         <span class="material-symbols-outlined icones-topbar">
           groups
         </span>
-      </button>
+      </button> -->
       <!-- <button class="btn-icon" id="btn-share" title="compartilhar">
         <span class="material-symbols-outlined icones-topbar">
           share
@@ -68,7 +69,7 @@
           background_dot_small
         </span>
       </button> -->
-      <button class="btn-icon" id="btn-table-view" title="visualizar em tabela">
+      <button class="btn-icon" id="btn-table-view" title="visualizar em tabela" style="display:none">
         <span class="material-symbols-outlined icones-topbar">
           table
         </span>
@@ -80,12 +81,7 @@
           <circle cx="12" cy="12" r="9" />
         </svg>
       </button> -->
-      <button class="btn-icon" id="btn-theme" title="mudar tema">
-        <span class="material-symbols-outlined icones-topbar">
-          light_mode
-        </span>
-      </button>
-      <button class="btn-icon" id="btn-export" title="exportar/importar">
+      <button class="btn-icon" id="btn-export" title="exportar/importar" style="display:none">
         <span class="material-symbols-outlined icones-topbar">
           archive
         </span>
@@ -95,15 +91,25 @@
           upload
         </span>
       </button> -->
-      <button class="btn-icon" id="btn-toggle-panel" title="painel">
+      <button class="btn-icon" id="btn-toggle-panel" title="painel" style="display:none">
         <span class="material-symbols-outlined icones-topbar">
           arrow_menu_close
         </span>
       </button>
-      <div class="user-pill" id="user-pill" onclick="$('user-modal').classList.add('v')">
+      <button class="btn-icon" id="btn-theme" title="mudar tema">
+        <span class="material-symbols-outlined icones-topbar">
+          light_mode
+        </span>
+      </button>
+      <button class="btn-icon" id="btn-account" title="conta" onclick="$('user-modal').classList.add('v')">
+        <span class="material-symbols-outlined icones-topbar">
+          account_circle
+        </span>
+      </button>
+      <!-- <div class="user-pill" id="user-pill" onclick="$('user-modal').classList.add('v')">
         <div class="user-pill-av" id="ua"></div>
         <span id="uname">visitante</span>
-      </div>
+      </div> opção de ter o nome da conta ali na topbar-->
     </div>
     <div id="export-menu" class="topbar-menu">
       <button class="topbar-menu-item" id="export-img">
@@ -185,8 +191,17 @@
         <div class="group-list" id="group-list"></div>
         <div class="add-group-row">
           <input class="form-input" id="inp-gname" placeholder="novo grupo…" maxlength="20">
-          <input type="color" id="inp-gcolor" value="#a78bfa">
-          <button class="btn-small" id="btn-add-group">+</button>
+          <div class="color-picker-wrapper">
+            <input type="color" id="inp-gcolor" value="#ff4d6d" title="selecionar cor">
+            <span class="material-symbols-outlined color-icon">
+              colors
+            </span>
+          </div>
+          <button class="btn-small" id="btn-add-group">
+            <span class="material-symbols-outlined">
+              add
+            </span>
+          </button>
         </div>
       </div>
       <div class="panel-section">
@@ -264,11 +279,6 @@
         <div class="photo-upload" id="pu-edit">
           <input type="file" accept="image/*" id="edit-photo-inp" onchange="handlePhoto(this,'edit')">
           <div id="pu-edit-prev">
-            <div class="pu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"
-                stroke-linecap="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg></div>
             <div class="pu-label">trocar foto</div>
           </div>
         </div>
@@ -277,18 +287,16 @@
       <div class="form-group">
         <label>gênero</label>
         <div class="gender-toggle">
-          <button class="gender-btn" id="e-gbf" onclick="selEditGender('female')"><svg viewBox="0 0 24 24">
-              <circle cx="12" cy="8" r="5" />
-              <rect x="11" y="13" width="2" height="8" rx="1" />
-              <rect x="8.5" y="18" width="7" height="2" rx="1" />
-            </svg>mulher</button>
-          <button class="gender-btn" id="e-gbm" onclick="selEditGender('male')"><svg viewBox="0 0 24 24">
-              <circle cx="9.5" cy="14.5" r="5" />
-              <rect x="15.5" y="3" width="5.5" height="2" rx="1" />
-              <rect x="19" y="3" width="2" height="5.5" rx="1" />
-              <line x1="13.5" y1="10.5" x2="19.5" y2="4.5" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" />
-            </svg>homem</button>
+          <button class="gender-btn" id="e-gbf" onclick="selEditGender('female')">
+            <span class="material-symbols-outlined">
+              female
+            </span>
+            mulher</button>
+          <button class="gender-btn" id="e-gbm" onclick="selEditGender('male')">
+            <span class="material-symbols-outlined">
+              female
+            </span>
+            homem</button>
         </div>
       </div>
       <div class="form-group">
@@ -508,8 +516,19 @@
       <img id="logo-contorno-cinza" src="assets/svg/kissweblogo_quadrado_contorno.svg">
     </div>
     <h2>nenhuma teia</h2>
-    <p>crie sua primeira teia para começar</p><button class="btn-primary" id="btn-create-first-web">criar primeira
-      teia</button>
+    <p>crie ou importe sua primeira teia para começar!</p>
+    <div id="btns-no-webs">
+      <button class="btn-new-web btn-new-web-empty" id="btn-create-first-web" title="criar teia">
+        <span class="material-symbols-outlined icone-adicionar">
+          add_circle
+        </span>
+      </button>
+      <button class="btn-new-web btn-new-web-empty" id="import-first-file-btn" title="importar teia">
+        <span class="material-symbols-outlined icone-adicionar">
+          upload
+        </span>
+      </button>
+    </div>
   </div>
 
   <!-- ══ TOAST ══ -->
@@ -537,9 +556,16 @@
         my_location
       </span>
     </button>
-    <button class="zoom-btn" id="btn-physics" title="adicionar fisica" style="font-size:.72rem">
+    <div id="btns-fisica">
+      <button class="zoom-btn" id="btn-physics" title="adicionar fisica" style="font-size:.72rem">
+        <span class="material-symbols-outlined">
+          stream
+        </span>
+      </button>
+    </div>
+    <button class="zoom-btn" id="btn-shuffle" title="reorganizar teia" style="font-size:.72rem" style="display:none">
       <span class="material-symbols-outlined">
-        stream
+        question_exchange
       </span>
     </button>
   </div>

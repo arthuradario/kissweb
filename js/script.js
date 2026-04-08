@@ -217,19 +217,30 @@ function enterApp() {
     if (!S.currentWebId || !myWebs().find(w => w.id === S.currentWebId)) S.currentWebId = myWebs()[0].id;
     save(); rebuildNodes(); render();
 }
+
+//PARTE DE CONTROLE DE VISUALIZAÇÃO E INTERFACE QUANDO NÃO HÁ TEIAS
+
 function showAppUI() {
-    ['topbar', 'canvas-wrap', 'zoom-controls'].forEach(id => $(id).style.display = '');
+    ['topbar', 'canvas-wrap', 'zoom-controls', 'btn-export', 'btn-table-view', 'btn-toggle-panel', 'btn-new-web', 'btn-manage-webs'].forEach(id => $(id).style.display = '');
     $('panel').style.display = 'flex'; $('panel-toggle').style.display = 'flex';
     $('empty-state').style.display = '';
     $('panel').classList.add('open'); $('panel-toggle').textContent = '▶';
 }
 function hideAppUI() {
-    ['topbar', 'canvas-wrap', 'zoom-controls', 'panel', 'panel-toggle', 'empty-state'].forEach(id => $(id).style.display = 'none');
+    ['topbar', 'canvas-wrap', 'zoom-controls', 'panel', 'panel-toggle', 'empty-state', 'btn-export', 'btn-table-view', 'btn-toggle-panel', 'btn-new-web', 'btn-manage-webs'].forEach(id => $(id).style.display = 'none');
 }
 function showNoWebsState() {
-    $('topbar').style.display = ''; $('canvas-wrap').style.display = 'none';
-    $('panel').style.display = 'none'; $('panel-toggle').style.display = 'none';
-    $('zoom-controls').style.display = 'none'; $('empty-state').style.display = 'none';
+    $('topbar').style.display = '';
+    $('canvas-wrap').style.display = 'none';
+    $('panel').style.display = 'none';
+    $('panel-toggle').style.display = 'none';
+    $('zoom-controls').style.display = 'none';
+    $('btn-export').style.display = 'none';
+    $('btn-table-view').style.display = 'none';
+    $('btn-toggle-panel').style.display = 'none';
+    $('btn-new-web').style.display = 'none';
+    $('btn-manage-webs').style.display = 'none';
+    $('empty-state').style.display = 'none';
     $('no-webs-state').classList.add('v');
 }
 function hideNoWebsState() { $('no-webs-state').classList.remove('v'); }
@@ -929,7 +940,14 @@ function addPerson() {
     const groups = [...$('inp-group').selectedOptions].map(o => o.value);
     const cx = (wrap.clientWidth / 2 - vx) / vscale + (Math.random() - .5) * 130;
     const cy = (wrap.clientHeight / 2 - vy) / vscale + (Math.random() - .5) * 130;
-    const p = { id: uid(), name, gender: selGenderVal, photo: addPhoto, groups, x: cx, y: cy };
+    const p = {
+        id: uid(), name, gender: selGenderVal, photo: addPhoto, groups, x: cx, y: cy,
+    // fisica:
+    vx: 0, 
+    vy: 0, 
+    fx: 0, 
+    fy: 0
+    };
     w.people.push(p); save();
     const el = makeNode(p); el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
     canvasEl.appendChild(el); nodeEls[p.id] = el;
@@ -1006,12 +1024,26 @@ function showWebCtx(e, webId) {
 function hideWebCtx() { $('web-ctx-menu').classList.remove('v'); }
 
 document.addEventListener('click', e => {
-    if (!$('ctx-menu').contains(e.target)) hideCtx();
-    if (!$('web-ctx-menu').contains(e.target)) hideWebCtx();
-    const em = $('export-menu'); const eb = $('btn-export');
-    if (em && eb && e.target !== eb && !em.contains(e.target)) em.classList.remove('v');
-    const sem = $('solo-export-menu'); const seb = $('solo-export-btn');
-    if (sem && seb && e.target !== seb && !sem.contains(e.target)) sem.classList.remove('v');
+    // Fecha o menu de contexto comum
+    if (!$('ctx-menu').contains(e.target)) {
+        hideCtx();
+    }
+    // Fecha o menu de contexto web
+    if (!$('web-ctx-menu').contains(e.target)) {
+        hideWebCtx();
+    }
+    // Lógica do Menu de Exportação
+    const em = $('export-menu');
+    const eb = $('btn-export');
+    if (em && eb && !eb.contains(e.target) && !em.contains(e.target)) {
+        em.classList.remove('v');
+    }
+    // Lógica do Menu de Exportação Solo
+    const sem = $('solo-export-menu');
+    const seb = $('solo-export-btn');
+    if (sem && seb && !seb.contains(e.target) && !sem.contains(e.target)) {
+        sem.classList.remove('v');
+    }
 });
 
 $('ctx-connect').onclick = () => { const id = ctxId; hideCtx(); if (id) startConn(id); };
@@ -1149,7 +1181,11 @@ $('btn-center').onclick = () => {
 };
 
 /* ══ PANEL TOGGLE ════════════════════════════════════════ */
-function togglePanel() { const p = $('panel'), b = $('panel-toggle'); p.classList.toggle('open'); b.textContent = p.classList.contains('open') ? '▶' : '◀'; }
+function togglePanel() {
+    const p = $('panel'), b = $('panel-toggle');
+    p.classList.toggle('open'); 
+    b.textContent = p.classList.contains('open') ? '▶' : '◀'; 
+}
 $('panel-toggle').onclick = togglePanel;
 $('btn-toggle-panel').onclick = togglePanel;
 
@@ -1231,7 +1267,10 @@ function loadShared(data) {
 }
 
 /* ══ EXPORT / IMPORT ═════════════════════════════════════ */
-function toggleExportMenu() { console.log("botão exportar clicado"); $('export-menu').classList.toggle('v'); }
+function toggleExportMenu() {
+    console.log("botão exportar clicado");
+    $('export-menu').classList.toggle('v');
+}
 function hideExportMenu() { $('export-menu').classList.remove('v'); }
 function toggleSoloExportMenu() { $('solo-export-menu').classList.toggle('v'); }
 function hideSoloExportMenu() { $('solo-export-menu').classList.remove('v'); }
@@ -1408,7 +1447,16 @@ $('btn-export').onclick = toggleExportMenu;
 $('export-img').onclick = () => { hideExportMenu(); exportWebAsImage(); };
 $('export-pdf').onclick = () => { hideExportMenu(); exportWebAsPDF(); };
 $('export-file').onclick = () => { hideExportMenu(); exportWebAsFile(); };
-$('import-file-btn').onclick = () => { hideExportMenu(); $('import-file').click(); }
+const triggerImport = () => { 
+    if (typeof hideExportMenu === 'function') hideExportMenu(); 
+    $('import-file').click(); 
+};
+if ($('import-file-btn')) {
+    $('import-file-btn').onclick = triggerImport;
+}
+if ($('import-first-file-btn')) {
+    $('import-first-file-btn').onclick = triggerImport;
+}
 $('import-file').addEventListener('change', handleImportFile);
 //$('btn-import').onclick = () => $('import-file').click();; removido pois foi integrado ao menu de exportação, pode ser refeito mais tarde se houver demanda
 $('solo-export-btn').onclick = e => { e.stopPropagation(); toggleSoloExportMenu(); };
