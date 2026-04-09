@@ -3,17 +3,19 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- Removed maximum-scale=1.0 and user-scalable=no — these break accessibility.
+       touch-action:manipulation in CSS handles double-tap zoom instead. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>kissweb</title>
   <link rel="icon" href="assets/svg/kissweblogo_quadrado.svg" type="image/svg+xml">
+  <!-- Material Symbols — use display=block to avoid FOIT -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <link href="css/style.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <!-- <script src="js/supabase.js" defer></script>
-  <script src="js/auth.js" defer></script> -->
   <script src="js/script.js" defer></script>
   <script src="js/fisica.js"></script>
 </head>
@@ -25,9 +27,11 @@
       <div class="lock">senha</div>
       <h3>teia protegida</h3>
       <p>digite a senha para acessar<br>esta teia compartilhada</p>
-      <div class="form-group"><input class="form-input" type="password" id="gate-pw" placeholder="senha…"
-          style="text-align:center"></div>
-      <div class="auth-error" id="gate-err" style="margin-top:6px;text-align:left"></div>
+      <div class="form-group">
+        <input class="form-input" type="password" id="gate-pw" placeholder="senha…"
+          style="text-align:center" autocomplete="current-password" enterkeyhint="go">
+      </div>
+      <div class="auth-error" id="gate-err" style="margin-top:6px;text-align:left" role="alert"></div>
       <div style="margin-top:12px;display:flex;flex-direction:column;gap:7px">
         <button class="btn-primary" onclick="checkGate()">entrar na teia</button>
         <button class="btn-cancel" onclick="cancelGate()">← voltar</button>
@@ -35,108 +39,65 @@
     </div>
   </div>
 
-  <!-- ══ SHARED BANNER ══
-  <div id="shared-banner">
-    <span>visualizando teia de <strong id="shared-owner"></strong> — somente leitura</span>
-    <button onclick="this.parentElement.classList.remove('v')"
-      style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:20px;padding:4px 10px;cursor:pointer;font-size:.73rem">✕</button>
-  </div> -->
-
   <!-- ══ TOPBAR ══ -->
   <div id="topbar" style="display:none">
-    <div class="brand">kiss<img id="logo" src="assets/svg/kissweblogo.svg">eb</div>
+    <div class="brand">kiss<img id="logo" src="assets/svg/kissweblogo.svg" alt="">eb</div>
     <div class="divider"></div>
-    <button class="btn-icon" id="btn-manage-webs" title="gerenciar teias">
-      <img id="btn-logo-webs" src="assets/svg/kissweblogo.svg">
+    <button class="btn-icon" id="btn-manage-webs" title="gerenciar teias" aria-label="gerenciar teias">
+      <img id="btn-logo-webs" src="assets/svg/kissweblogo.svg" alt="">
     </button>
     <div class="web-tabs" id="web-tabs"></div>
-    <button class="btn-new-web" id="btn-new-web" title="nova teia" style="display:none">
+    <button class="btn-new-web" id="btn-new-web" title="nova teia" aria-label="nova teia" style="display:none">
       <span class="material-symbols-outlined icone-adicionar">
         add_circle
       </span>
     </button>
     <div class="topbar-actions">
-      <!-- <button class="btn-icon" id="btn-shared-webs" title="teias compartilhadas">
-        <span class="material-symbols-outlined icones-topbar">
-          groups
-        </span>
-      </button> -->
-      <!-- <button class="btn-icon" id="btn-share" title="compartilhar">
-        <span class="material-symbols-outlined icones-topbar">
-          share
-        </span>
-      </button> -->
-      <!-- <button class="btn-icon" id="btn-auto-layout" title="organizar automaticamente">
-        <span class="material-symbols-outlined icones-topbar">
-          background_dot_small
-        </span>
-      </button> -->
-      <button class="btn-icon" id="btn-table-view" title="visualizar teia em tabela" style="display:none">
+      <button class="btn-icon" id="btn-table-view" title="visualizar teia em tabela" aria-label="tabela" style="display:none">
         <span class="material-symbols-outlined icones-topbar">
           table
         </span>
       </button>
-      <!-- <button class="btn-icon" id="btn-batch-add" title="adicionar em lote">
-        <svg viewBox="0 0 24 24">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-          <circle cx="12" cy="12" r="9" />
-        </svg>
-      </button> -->
-      <button class="btn-icon" id="btn-export" title="exportar/importar teia" style="display:none">
+      <button class="btn-icon" id="btn-export" title="exportar/importar teia" aria-label="exportar" style="display:none">
         <span class="material-symbols-outlined icones-topbar">
           archive
         </span>
       </button>
-      <!-- <button class="btn-icon" id="btn-import" title="importar">
-        <span class="material-symbols-outlined icones-topbar">
-          upload
-        </span>
-      </button> -->
-      <button class="btn-icon" id="btn-toggle-panel" title="painel" style="display:none">
+      <button class="btn-icon" id="btn-toggle-panel" title="painel" aria-label="painel" style="display:none">
         <span class="material-symbols-outlined icones-topbar">
           arrow_menu_close
         </span>
       </button>
-      <button class="btn-icon" id="btn-theme" title="mudar tema">
+      <button class="btn-icon" id="btn-theme" title="mudar tema" aria-label="mudar tema">
         <span class="material-symbols-outlined icones-topbar">
           light_mode
         </span>
       </button>
-      <button class="btn-icon" id="btn-account" title="conta" onclick="$('user-modal').classList.add('v')">
+      <button class="btn-icon" id="btn-account" title="conta" aria-label="conta" onclick="$('user-modal').classList.add('v')">
         <span class="material-symbols-outlined icones-topbar">
           account_circle
         </span>
       </button>
-      <!-- <div class="user-pill" id="user-pill" onclick="$('user-modal').classList.add('v')">
-        <div class="user-pill-av" id="ua"></div>
-        <span id="uname">visitante</span>
-      </div> opção de ter o nome da conta ali na topbar-->
     </div>
     <div id="export-menu" class="topbar-menu">
       <button class="topbar-menu-item" id="export-img">
         <span class="material-symbols-outlined">image</span>
         exportar como imagem
       </button>
-
       <button class="topbar-menu-item" id="export-pdf">
         <span class="material-symbols-outlined">picture_as_pdf</span>
         exportar como pdf
       </button>
-
       <button class="topbar-menu-item" id="export-file">
         <span class="material-symbols-outlined">file_download</span>
         exportar como arquivo
       </button>
-
       <div class="menu-sep"></div>
-
       <button class="topbar-menu-item" id="import-file-btn">
         <span class="material-symbols-outlined">file_upload</span>
         importar arquivo
       </button>
     </div>
-
     <input type="file" id="import-file" accept=".kiss,.json,application/json" style="display:none">
   </div>
 
@@ -153,31 +114,31 @@
         <div class="form-group">
           <label>foto</label>
           <div class="photo-upload" id="pu-add">
-            <input type="file" accept="image/*" id="inp-photo" onchange="handlePhoto(this,'add')">
+            <!-- capture="user" on mobile opens front camera directly -->
+            <input type="file" accept="image/*" capture="user" id="inp-photo" onchange="handlePhoto(this,'add')">
             <div id="pu-add-prev">
               <div class="pu-icon">
                 <span class="material-symbols-outlined icone-foto">
                   photo_camera_front
                 </span>
               </div>
-              <div class="pu-label">clique para adicionar foto</div>
+              <div class="pu-label">toque para adicionar foto</div>
             </div>
           </div>
         </div>
-        <div class="form-group"><label>nome</label><input class="form-input" id="inp-name" placeholder="ex: pedro, ana…"
-            maxlength="24"></div>
+        <div class="form-group">
+          <label for="inp-name">nome</label>
+          <input class="form-input" id="inp-name" placeholder="ex: pedro, ana…"
+            maxlength="24" autocapitalize="words" enterkeyhint="next">
+        </div>
         <div class="form-group">
           <label>gênero</label>
           <div class="gender-toggle">
             <button class="gender-btn af" id="gbf" onclick="selGender('female')">
-              <span class="material-symbols-outlined">
-                female
-              </span>mulher
+              <span class="material-symbols-outlined">female</span>mulher
             </button>
             <button class="gender-btn" id="gbm" onclick="selGender('male')">
-              <span class="material-symbols-outlined">
-                male
-              </span>homem
+              <span class="material-symbols-outlined">male</span>homem
             </button>
           </div>
         </div>
@@ -192,17 +153,14 @@
         <div class="panel-title">grupos</div>
         <div class="group-list" id="group-list"></div>
         <div class="add-group-row">
-          <input class="form-input" id="inp-gname" placeholder="novo grupo…" maxlength="20">
+          <input class="form-input" id="inp-gname" placeholder="novo grupo…" maxlength="20"
+                 enterkeyhint="done">
           <div class="color-picker-wrapper">
             <input type="color" id="inp-gcolor" value="#ff4d6d" title="selecionar cor">
-            <span class="material-symbols-outlined color-icon">
-              colors
-            </span>
+            <span class="material-symbols-outlined color-icon">colors</span>
           </div>
-          <button class="btn-small" id="btn-add-group">
-            <span class="material-symbols-outlined">
-              add
-            </span>
+          <button class="btn-small" id="btn-add-group" aria-label="adicionar grupo">
+            <span class="material-symbols-outlined">add</span>
           </button>
         </div>
       </div>
@@ -217,52 +175,36 @@
       <div class="people-list" id="people-list"></div>
     </div>
   </div>
-  <button id="panel-toggle" style="display:none">◀</button>
+  <button id="panel-toggle" style="display:none" aria-label="abrir/fechar painel">◀</button>
 
-  <!-- ══ CTX MENUS ══ -->
-  <div id="ctx-menu">
-    <div class="ctx-item" id="ctx-connect">
-      <span class="material-symbols-outlined">
-        diagonal_line
-      </span>
+  <!-- ══ CTX MENUS ══ 
+       On mobile: triggered by long-press (500ms touchstart) instead of right-click.
+       See script.js — long-press listener added to makeNode() -->
+  <div id="ctx-menu" role="menu">
+    <div class="ctx-item" id="ctx-connect" role="menuitem">
+      <span class="material-symbols-outlined">diagonal_line</span>
       conectar (beijo)
     </div>
-    <div class="ctx-item" id="ctx-edit">
-      <span class="material-symbols-outlined">
-        edit_square
-      </span>
+    <div class="ctx-item" id="ctx-edit" role="menuitem">
+      <span class="material-symbols-outlined">edit_square</span>
       editar
     </div>
-    <!-- <div class="ctx-item" id="ctx-solo">
-      <span class="material-symbols-outlined">
-        hub
-      </span>
-      ver teia individual
-    </div> removido indeterminadamente -->
     <div class="ctx-sep"></div>
-    <div class="ctx-item danger" id="ctx-delete">
-      <span class="material-symbols-outlined">
-        delete
-      </span>
+    <div class="ctx-item danger" id="ctx-delete" role="menuitem">
+      <span class="material-symbols-outlined">delete</span>
       remover
     </div>
   </div>
-  <div id="web-ctx-menu">
-    <div class="ctx-item" id="web-ctx-rename"><span class="material-symbols-outlined">
-        edit_square
-      </span>
+  <div id="web-ctx-menu" role="menu">
+    <div class="ctx-item" id="web-ctx-rename" role="menuitem">
+      <span class="material-symbols-outlined">edit_square</span>
       renomear
     </div>
-    <!-- <div class="ctx-item" id="btn-share"><span class="material-symbols-outlined">
-        share
-      </span>
-      compartilhar teia
-    </div> removido indeterminadamente -->
     <div class="ctx-sep"></div>
-    <div class="ctx-item danger" id="web-ctx-delete"><span class="material-symbols-outlined">
-        delete
-      </span>
-      excluir teia</div>
+    <div class="ctx-item danger" id="web-ctx-delete" role="menuitem">
+      <span class="material-symbols-outlined">delete</span>
+      excluir teia
+    </div>
   </div>
 
   <!-- ══ TEMP LINE ══ -->
@@ -279,25 +221,24 @@
       <div class="form-group">
         <label>foto</label>
         <div class="photo-upload" id="pu-edit">
-          <input type="file" accept="image/*" id="edit-photo-inp" onchange="handlePhoto(this,'edit')">
+          <input type="file" accept="image/*" capture="user" id="edit-photo-inp" onchange="handlePhoto(this,'edit')">
           <div id="pu-edit-prev">
             <div class="pu-label">trocar foto</div>
           </div>
         </div>
       </div>
-      <div class="form-group"><label>nome</label><input class="form-input" id="edit-name" maxlength="24"></div>
+      <div class="form-group">
+        <label for="edit-name">nome</label>
+        <input class="form-input" id="edit-name" maxlength="24" autocapitalize="words">
+      </div>
       <div class="form-group">
         <label>gênero</label>
         <div class="gender-toggle">
           <button class="gender-btn" id="e-gbf" onclick="selEditGender('female')">
-            <span class="material-symbols-outlined">
-              female
-            </span>
+            <span class="material-symbols-outlined">female</span>
             mulher</button>
           <button class="gender-btn" id="e-gbm" onclick="selEditGender('male')">
-            <span class="material-symbols-outlined">
-              female
-            </span>
+            <span class="material-symbols-outlined">male</span>
             homem</button>
         </div>
       </div>
@@ -317,8 +258,11 @@
   <div class="modal-overlay" id="new-web-modal">
     <div class="modal">
       <h3>NOVA TEIA</h3>
-      <div class="form-group"><label>nome da teia</label><input class="form-input" id="new-web-name"
-          placeholder="ex: turma b, festa jun…" maxlength="28"></div>
+      <div class="form-group">
+        <label for="new-web-name">nome da teia</label>
+        <input class="form-input" id="new-web-name"
+          placeholder="ex: turma b, festa jun…" maxlength="28" enterkeyhint="go">
+      </div>
       <div class="modal-actions">
         <button class="btn-cancel" onclick="$('new-web-modal').classList.remove('v')">cancelar</button>
         <button class="btn-primary" style="flex:1" id="new-web-create">criar</button>
@@ -326,58 +270,32 @@
     </div>
   </div>
 
-  <!-- ══ MODAL: Share ══
-  <div class="modal-overlay" id="share-modal">
-    <div class="modal">
-      <h3>compartilhar teia</h3>
-      <div class="share-toggle-row"><span class="share-toggle-label">compartilhamento público</span><button
-          class="toggle" id="share-toggle" onclick="toggleShare()"></button></div>
-      <div id="share-on" style="display:none">
-        <div class="share-link-box"><input type="text" id="share-link-inp" readonly><button class="btn-copy"
-            id="copy-btn" onclick="copyLink()">copiar</button></div>
-        <div style="margin-bottom:8px">
-          <div class="panel-title" style="margin-bottom:7px">acesso</div>
-          <div class="share-access-type"><button class="access-btn active" id="acc-free"
-              onclick="setAccess('free')">livre</button><button class="access-btn" id="acc-pw"
-              onclick="setAccess('password')">com senha</button></div>
-        </div>
-        <div class="share-pw-section" id="share-pw-sec">
-          <div class="form-group"><label>senha da teia</label><input class="form-input" type="password"
-              id="share-pw-inp" placeholder="digite uma senha…"></div>
-          <button class="btn-small" style="width:100%;margin-bottom:8px" onclick="savePw()">salvar senha</button>
-        </div>
-        <div class="share-info-box" id="share-info"></div>
-      </div>
-      <div id="share-off" style="font-size:.76rem;color:var(--text-muted);padding:10px 0">ative para gerar um link
-        público de visualização.</div>
-      <div class="modal-actions"><button class="btn-primary" style="flex:1"
-          onclick="$('share-modal').classList.remove('v')">fechar</button></div>
-    </div>
-  </div> -->
-
   <!-- ══ MODAL: User ══ -->
   <div class="modal-overlay" id="user-modal">
     <div class="modal" style="width:min(300px,100%)">
       <h3 id="um-name">usuário</h3>
       <p id="um-email" style="font-size:.73rem;color:var(--text-muted);margin-bottom:16px"></p>
       <button class="btn-primary" onclick="doLogout()">sair da conta</button>
-      <div style="margin-top:8px"><button class="btn-cancel" style="width:100%"
-          onclick="$('user-modal').classList.remove('v')">fechar</button></div>
+      <div style="margin-top:8px">
+        <button class="btn-cancel" style="width:100%"
+          onclick="$('user-modal').classList.remove('v')">fechar</button>
+      </div>
     </div>
   </div>
 
   <!-- ══ MODAL: Alert ══ -->
-  <div class="modal-overlay" id="alert-modal">
+  <div class="modal-overlay" id="alert-modal" role="alertdialog" aria-modal="true">
     <div class="modal">
       <h3 id="alert-title">aviso</h3>
       <p id="alert-message" style="font-size:.85rem;line-height:1.5;color:var(--text)"></p>
-      <div class="modal-actions"><button class="btn-primary"
-          onclick="$('alert-modal').classList.remove('v')">ok</button></div>
+      <div class="modal-actions">
+        <button class="btn-primary" onclick="$('alert-modal').classList.remove('v')">ok</button>
+      </div>
     </div>
   </div>
 
   <!-- ══ MODAL: Confirm ══ -->
-  <div class="modal-overlay" id="confirm-modal">
+  <div class="modal-overlay" id="confirm-modal" role="alertdialog" aria-modal="true">
     <div class="modal">
       <h3 id="confirm-title">confirmar</h3>
       <p id="confirm-message" style="font-size:.85rem;line-height:1.5;color:var(--text)"></p>
@@ -394,7 +312,7 @@
       <h3 id="input-title">entrada</h3>
       <p id="input-message" style="font-size:.82rem;color:var(--text-muted);margin-bottom:8px"></p>
       <label class="modal-label" id="input-label">nome da teia</label>
-      <input class="form-input" id="input-field">
+      <input class="form-input" id="input-field" enterkeyhint="go">
       <div class="modal-actions">
         <button class="btn-cancel" onclick="$('input-modal').classList.remove('v')">cancelar</button>
         <button class="btn-primary" id="input-ok">ok</button>
@@ -407,12 +325,13 @@
     <div class="modal"
       style="width:100%;height:100%;max-height:100%;border-radius:0;display:flex;flex-direction:column;padding:0">
       <div class="tv-header">
-        <h3>pessoas</h3>
-        <input type="search" id="tv-search" placeholder="buscar…" oninput="renderTableView(cw())">
+        <h3>PESSOAS</h3>
+        <input type="search" class="inp-busca-tabela" id="tv-search" placeholder="buscar…"
+               oninput="renderTableView(cw())" enterkeyhint="search">
         <span id="tv-count" style="font-size:.75rem;color:var(--text-muted)"></span>
-        <button onclick="$('table-modal').classList.remove('v')"
-          style="background:var(--bg);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;padding:6px 14px;font-size:.8rem;font-weight:600;color:var(--text)">fechar
-          ✕</button>
+        <button onclick="$('table-modal').classList.remove('v')" class="btn-icon" aria-label="fechar">
+          <span class="material-symbols-outlined icones-topbar">close</span>
+        </button>
       </div>
       <div class="tv-table-wrap">
         <table class="tv-table">
@@ -420,10 +339,8 @@
             <tr>
               <th style="width:44px"></th>
               <th class="tv-th" data-field="name" onclick="sortTable('name')">nome <span class="sort-arrow"></span></th>
-              <th class="tv-th" data-field="gender" onclick="sortTable('gender')">gênero <span
-                  class="sort-arrow"></span></th>
-              <th class="tv-th" data-field="kisses" onclick="sortTable('kisses')" style="text-align:center">beijos <span
-                  class="sort-arrow">↓</span></th>
+              <th class="tv-th" data-field="gender" onclick="sortTable('gender')">gênero <span class="sort-arrow"></span></th>
+              <th class="tv-th" data-field="kisses" onclick="sortTable('kisses')" style="text-align:center">beijos <span class="sort-arrow">↓</span></th>
               <th>beijou</th>
               <th>grupos</th>
               <th style="width:90px"></th>
@@ -436,91 +353,48 @@
   </div>
 
   <!-- ══ MODAL: Manage Webs ══ -->
-   <div class="modal-overlay" id="webs-table-modal">
-  <div class="modal" style="width:min(90vw,640px); display:flex; flex-direction:column; max-height:85vh;">
-    <div style="display:flex;align-items:center;margin-bottom:12px;gap:8px">
-      <span class="material-symbols-outlined" style="font-size:24px;color:var(--primary)">
-        grid_view
-      </span>
-      <h3 style="margin:0;flex:1">GERENCIAR TEIAS</h3>
-      <button class="btn-icon" onclick="$('webs-table-modal').classList.remove('v')" title="fechar">
-        <span class="material-symbols-outlined">close</span>
-      </button>
-    </div>
-
-    <div style="display:flex;gap:8px;margin-bottom:12px">
-      <input type="text" id="webs-tv-search" class="form-input" placeholder="buscar teia por nome..." oninput="renderWebsTableView()">
-    </div>
-
-    <div style="overflow-y:auto;flex:1;border:1px solid var(--line);border-radius:8px">
-      <table style="width:100%;border-collapse:collapse;font-size:0.85rem" id="webs-table">
-        <thead style="background:var(--bg-panel);position:sticky;top:0;z-index:2;box-shadow:0 1px 0 var(--line)">
-          <tr>
-            <th class="tv-th webs-tv-th" data-field="name" onclick="sortWebsTable('name')" style="text-align:left;padding:8px;cursor:pointer">
-              nome da teia <span class="sort-arrow"></span>
-            </th>
-            <th class="tv-th webs-tv-th" data-field="pessoas" onclick="sortWebsTable('pessoas')" style="text-align:center;padding:8px;cursor:pointer">
-              pessoas <span class="sort-arrow">↓</span>
-            </th>
-            <th class="tv-th webs-tv-th" data-field="grupos" onclick="sortWebsTable('grupos')" style="text-align:center;padding:8px;cursor:pointer">
-              grupos <span class="sort-arrow"></span>
-            </th>
-            <th class="tv-th webs-tv-th" data-field="beijos" onclick="sortWebsTable('beijos')" style="text-align:center;padding:8px;cursor:pointer">
-              beijos <span class="sort-arrow"></span>
-            </th>
-            <th class="tv-th" style="text-align:center;padding:8px">ações</th>
-          </tr>
-        </thead>
-        <tbody id="webs-tv-body">
-          </tbody>
-      </table>
-    </div>
-
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:.8rem;color:var(--text-muted)">
-      <span id="webs-tv-count">0 / 0 teias</span>
-      <button class="btn-cancel" onclick="$('webs-table-modal').classList.remove('v')">fechar</button>
+  <div class="modal-overlay" id="webs-table-modal" style="align-items:stretch;justify-content:stretch;padding:0">
+    <div class="modal" style="width:100%;height:100%;max-height:100%;border-radius:0;display:flex;flex-direction:column;padding:0">
+      <div class="tv-header">
+        <h3>TEIAS</h3>
+        <input type="search" class="inp-busca-tabela" id="webs-tv-search" placeholder="buscar teia..."
+               oninput="renderWebsTableView()" enterkeyhint="search">
+        <span id="webs-tv-count" style="font-size:.75rem;color:var(--text-muted)"></span>
+        <button onclick="$('webs-table-modal').classList.remove('v')" class="btn-icon" aria-label="fechar">
+          <span class="material-symbols-outlined icones-topbar">close</span>
+        </button>
+      </div>
+      <div class="tv-table-wrap">
+        <table class="tv-table">
+          <thead>
+            <tr>
+              <th class="tv-th webs-tv-th" data-field="name" onclick="sortWebsTable('name')">nome da teia <span class="sort-arrow"></span></th>
+              <th class="tv-th webs-tv-th" data-field="pessoas" onclick="sortWebsTable('pessoas')" style="text-align:center">pessoas <span class="sort-arrow">↓</span></th>
+              <th class="tv-th webs-tv-th" data-field="grupos" onclick="sortWebsTable('grupos')" style="text-align:center">grupos <span class="sort-arrow"></span></th>
+              <th class="tv-th webs-tv-th" data-field="beijos" onclick="sortWebsTable('beijos')" style="text-align:center">beijos <span class="sort-arrow"></span></th>
+              <th style="width:90px"></th>
+            </tr>
+          </thead>
+          <tbody id="webs-tv-body"></tbody>
+        </table>
+      </div>
     </div>
   </div>
-</div>
 
   <!-- ══ MODAL: Group Member Picker ══ -->
   <div class="modal-overlay" id="group-picker-modal">
     <div class="modal" style="width:min(96vw,440px)">
       <h3 id="gp-title">adicionar ao grupo</h3>
       <input type="hidden" id="gp-gid">
-      <p style="font-size:.74rem;color:var(--text-muted);margin-bottom:12px">clique numa pessoa para adicionar ou
-        remover do grupo.</p>
-      <div id="gp-list" style="max-height:55vh;overflow-y:auto"></div>
-      <div class="modal-actions"><button class="btn-primary"
-          onclick="$('group-picker-modal').classList.remove('v')">fechar</button></div>
+      <p style="font-size:.76rem;color:var(--text-muted);margin-bottom:12px">
+        Toque numa pessoa para adicionar ou remover do grupo.
+      </p>
+      <div id="gp-list" style="max-height:55vh;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
+      <div class="modal-actions">
+        <button class="btn-primary" onclick="$('group-picker-modal').classList.remove('v')">fechar</button>
+      </div>
     </div>
   </div>
-
-  <!-- ══ MODAL: Solo View (enhanced) ══
-  <div class="modal-overlay" id="solo-modal">
-    <div class="modal" style="width:min(96vw,580px)">
-      <div class="solo-header">
-        <h3 id="solo-title" style="margin:0;flex:1">teia individual</h3>
-        <button onclick="$('solo-modal').classList.remove('v')"
-          style="background:var(--bg);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;padding:5px 12px;font-size:.8rem;color:var(--text)">✕</button>
-      </div>
-      <div class="solo-controls">
-        <button class="solo-zoom-btn" onclick="soloZoom(1.25)">+</button>
-        <button class="solo-zoom-btn" onclick="soloZoom(0.8)">−</button>
-        <button class="solo-zoom-btn" onclick="soloCenter()">centralizar</button>
-        <div class="solo-export-wrap">
-          <button class="solo-zoom-btn" id="solo-export-btn" title="exportar">exportar ▾</button>
-          <div id="solo-export-menu" class="topbar-menu solo-menu">
-            <button class="topbar-menu-item" id="solo-export-img">exportar como imagem</button>
-            <button class="topbar-menu-item" id="solo-export-pdf">exportar como pdf</button>
-            <button class="topbar-menu-item" id="solo-export-file">exportar como arquivo</button>
-          </div>
-        </div>
-      </div>
-      <svg id="solo-svg"></svg>
-    </div>
-  </div> removido indeterminadamente -->
-
 
   <!-- ══ MODAL: Search ══ -->
   <div class="modal-overlay" id="search-modal">
@@ -528,95 +402,68 @@
       <h3>BUSCAR</h3>
       <label class="modal-label" for="search-input">nome da pessoa</label>
       <div class="search-box">
-        <input class="form-input" id="search-input" type="search" placeholder="digite para filtrar…">
+        <input class="form-input" id="search-input" type="search"
+               placeholder="digite para filtrar…" enterkeyhint="search">
       </div>
-      <p style="font-size:.74rem;color:var(--text-muted);margin-top:8px;line-height:1.5">Digite para buscar pessoas.
-        Clique em uma pessoa para centralizar e destacar suas conexões.</p>
+      <p style="font-size:.76rem;color:var(--text-muted);margin-top:8px;line-height:1.5">
+        Digite para buscar. Toque em uma pessoa para centralizar e destacar suas conexões.
+      </p>
       <div class="search-results" id="search-results"></div>
-      <div class="modal-actions"><button class="btn-cancel" onclick="hideSearchModal()">fechar</button></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="hideSearchModal()">fechar</button>
+      </div>
     </div>
   </div>
-
-  <!-- ══ MODAL: Batch Add ══ 
-  <div class="modal-overlay" id="batch-modal">
-    <div class="modal" style="width:min(96vw,500px)">
-      <h3>adicionar em lote</h3>
-      <p style="font-size:.74rem;color:var(--text-muted);margin-bottom:12px;line-height:1.55">uma pessoa por linha ·
-        formato: <code>Nome, m/f</code></p>
-      <textarea id="batch-input" oninput="parseBatch()" placeholder="Ana&#10;Pedro, m&#10;Carla, f&#10;Lucas, m"
-        style="width:100%;height:140px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.84rem;background:var(--bg);color:var(--text);resize:vertical;outline:none;line-height:1.6"></textarea>
-      <div id="batch-preview" style="margin-top:10px;max-height:140px;overflow-y:auto;padding:0 2px"></div>
-      <div class="modal-actions">
-        <button class="btn-cancel" onclick="$('batch-modal').classList.remove('v')">cancelar</button>
-        <button class="btn-primary" style="flex:1" onclick="confirmBatchAdd()">adicionar todas</button>
-      </div>
-    </div>
-  </div> -->
 
   <!-- ══ EMPTY / NO-WEBS ══ -->
   <div id="empty-state" style="display:none">
     <div class="big">
-      <img src="assets/svg/kissweblogo_quadrado_contorno.svg">
+      <img src="assets/svg/kissweblogo_quadrado_contorno.svg" alt="">
     </div>
     <h2>teia vazia</h2>
-    <p>adicione pessoas pelo painel lateral →<br>clique com botão direito para conectar pessoas</p>
+    <!-- Changed desktop-centric "botão direito" instruction to mobile-friendly version -->
+    <p>adicione pessoas pelo painel lateral →<br>segure uma pessoa para ver opções de conexão</p>
   </div>
   <div id="no-webs-state">
     <div class="big">
-      <img id="logo-contorno-cinza" src="assets/svg/kissweblogo_quadrado_contorno.svg">
+      <img id="logo-contorno-cinza" src="assets/svg/kissweblogo_quadrado_contorno.svg" alt="">
     </div>
     <h2>nenhuma teia</h2>
     <p>crie ou importe sua primeira teia para começar!</p>
     <div id="btns-no-webs">
-      <button class="btn-new-web btn-new-web-empty" id="btn-create-first-web" title="criar teia">
-        <span class="material-symbols-outlined icone-adicionar">
-          add_circle
-        </span>
+      <button class="btn-new-web btn-new-web-empty" id="btn-create-first-web" title="criar teia" aria-label="criar teia">
+        <span class="material-symbols-outlined icone-adicionar">add_circle</span>
       </button>
-      <button class="btn-new-web btn-new-web-empty" id="import-first-file-btn" title="importar teia">
-        <span class="material-symbols-outlined icone-adicionar">
-          upload
-        </span>
+      <button class="btn-new-web btn-new-web-empty" id="import-first-file-btn" title="importar teia" aria-label="importar teia">
+        <span class="material-symbols-outlined icone-adicionar">upload</span>
       </button>
     </div>
   </div>
 
   <!-- ══ TOAST ══ -->
-  <div id="toast"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
 
-  <!-- ══ ZOOM ══ -->
+  <!-- ══ ZOOM CONTROLS ══ -->
   <div id="zoom-controls" style="display:none">
-    <button class="zoom-btn" id="search-open" title="buscar pessoa">
-      <span class="material-symbols-outlined">
-        search
-      </span>
+    <button class="zoom-btn" id="search-open" title="buscar pessoa" aria-label="buscar pessoa">
+      <span class="material-symbols-outlined">search</span>
     </button>
-    <button class="zoom-btn" id="zoom-in" title="aproximar">
-      <span class="material-symbols-outlined">
-        add
-      </span>
+    <button class="zoom-btn" id="zoom-in" title="aproximar" aria-label="aproximar">
+      <span class="material-symbols-outlined">add</span>
     </button>
-    <button class="zoom-btn" id="zoom-out" title="afastar">
-      <span class="material-symbols-outlined">
-        remove
-      </span>
+    <button class="zoom-btn" id="zoom-out" title="afastar" aria-label="afastar">
+      <span class="material-symbols-outlined">remove</span>
     </button>
-    <button class="zoom-btn" id="btn-center" title="centralizar" style="font-size:.72rem">
-      <span class="material-symbols-outlined">
-        my_location
-      </span>
+    <button class="zoom-btn" id="btn-center" title="centralizar" aria-label="centralizar">
+      <span class="material-symbols-outlined">my_location</span>
     </button>
     <div id="btns-fisica">
-      <button class="zoom-btn" id="btn-physics" title="adicionar fisica" style="font-size:.72rem">
-        <span class="material-symbols-outlined">
-          stream
-        </span>
+      <button class="zoom-btn" id="btn-physics" title="física" aria-label="física">
+        <span class="material-symbols-outlined">stream</span>
       </button>
     </div>
-    <button class="zoom-btn" id="btn-shuffle" title="reorganizar teia" style="font-size:.72rem" style="display:none">
-      <span class="material-symbols-outlined">
-        question_exchange
-      </span>
+    <button class="zoom-btn" id="btn-shuffle" title="reorganizar" aria-label="reorganizar" style="display:none">
+      <span class="material-symbols-outlined">question_exchange</span>
     </button>
   </div>
 

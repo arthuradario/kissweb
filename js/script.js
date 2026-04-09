@@ -55,9 +55,40 @@ function myWebs() { return S.webs; }
 function showToast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2400); }
 
 // ── custom dialogs ───────────────────────────────────────
-function showAlert(msg, title = 'aviso') { $('alert-title').textContent = title; $('alert-message').textContent = msg; $('alert-modal').classList.add('v'); }
-function showConfirm(msg, cb, title = 'confirmar') { $('confirm-title').textContent = title; $('confirm-message').textContent = msg; $('confirm-ok').onclick = () => { $('confirm-modal').classList.remove('v'); cb(); }; $('confirm-modal').classList.add('v'); }
-function showInput(msg, def, cb, title = 'renomear', label = 'nome da teia') { $('input-title').textContent = title; $('input-message').textContent = msg; $('input-label').textContent = label; $('input-field').value = def || ''; $('input-ok').onclick = () => { const v = $('input-field').value.trim(); $('input-modal').classList.remove('v'); cb(v); }; $('input-modal').classList.add('v'); setTimeout(() => { $('input-field').focus(); $('input-field').onkeydown = e => { if (e.key === 'Enter') $('input-ok').click(); }; }, 80); }
+function showAlert(msg, title = 'aviso') {
+    $('alert-title').textContent = title;
+    $('alert-message').textContent = msg;
+    $('alert-modal').style.zIndex = '9999'; // Joga para o topo
+    $('alert-modal').classList.add('v');
+}
+function showConfirm(msg, cb, title = 'confirmar') {
+    $('confirm-title').textContent = title;
+    $('confirm-message').textContent = msg;
+    $('confirm-ok').onclick = () => {
+        $('confirm-modal').classList.remove('v');
+        cb();
+    };
+    $('confirm-modal').style.zIndex = '9999'; // Joga para o topo
+    $('confirm-modal').classList.add('v');
+}
+function showInput(msg, def, cb, title = 'renomear', label = 'nome da teia') {
+    $('input-title').textContent = title; $('input-message').textContent = msg;
+    $('input-label').textContent = label; $('input-field').value = def || '';
+    $('input-ok').onclick = () => {
+        const v = $('input-field').value.trim();
+        $('input-modal').classList.remove('v');
+        cb(v);
+    };
+    $('input-modal').style.zIndex = '9999'; // Joga para o topo
+    $('input-modal').classList.add('v');
+    setTimeout(() => {
+        $('input-field').focus();
+        $('input-field').onkeydown = e => {
+            if (e.key === 'Enter') $('input-ok').click();
+        };
+    },
+        80);
+}
 
 function normText(v) { return (v || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
 function centerOnPerson(id) {
@@ -252,7 +283,12 @@ function createWeb(name, doSave = true) {
 }
 
 /* ══ RENDER ══════════════════════════════════════════════ */
-function render() { renderTabs(); renderCanvas(); renderPanel(); updateEmpty(); }
+function render() {
+    renderTabs();
+    renderCanvas();
+    renderPanel();
+    updateEmpty();
+}
 
 function renderTabs() {
     const tabs = $('web-tabs'); tabs.innerHTML = '';
@@ -265,6 +301,25 @@ function renderTabs() {
             centerWeb();
         }
         btn.addEventListener('contextmenu', e => { e.preventDefault(); showWebCtx(e, w.id); });
+        // Long-press na tab para menu de contexto no mobile
+        let _tabLongPress = null;
+        btn.addEventListener('touchstart', e => {
+            const touch = e.touches[0];
+            _tabLongPress = setTimeout(() => {
+                if (navigator.vibrate) navigator.vibrate(40);
+                const fakeEvt = {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY,
+                    stopPropagation: () => { },
+                    preventDefault: () => { }
+                };
+                showWebCtx(fakeEvt, w.id);
+                e.preventDefault();
+            }, 500);
+        }, { passive: true });
+        btn.addEventListener('touchmove', () => { clearTimeout(_tabLongPress); });
+        btn.addEventListener('touchend', () => { clearTimeout(_tabLongPress); });
+        btn.addEventListener('touchcancel', () => { clearTimeout(_tabLongPress); });
         t.appendChild(btn); tabs.appendChild(t);
     });
 }
@@ -333,26 +388,65 @@ function makeNode(p) {
     });
     document.addEventListener('mouseup', () => { if (!dragging) return; dragging = false; el.classList.remove('dragging'); if (moved) { save(); renderLines(cw()); } });
 
-    // touch drag
+    // touch drag + long-press context menu
     let tOffX = 0, tOffY = 0, tMoved = false, tDragging = false;
+    let _longPressTimer = null;
+    const LONG_PRESS_MS = 500; // ms para ativar o menu de contexto
+
     el.addEventListener('touchstart', e => {
-        if (isShared) return; e.stopPropagation();
-        const touch = e.touches[0]; tDragging = true; tMoved = false;
+        if (isShared) return;
+        e.stopPropagation();
+        const touch = e.touches[0];
+        tDragging = true; tMoved = false;
         const r = canvasEl.getBoundingClientRect();
-        tOffX = (touch.clientX - r.left) / vscale - p.x; tOffY = (touch.clientY - r.top) / vscale - p.y;
+        tOffX = (touch.clientX - r.left) / vscale - p.x;
+        tOffY = (touch.clientY - r.top) / vscale - p.y;
         el.classList.add('dragging');
+
+        // Long-press: simula evento de contextmenu no mobile
+        _longPressTimer = setTimeout(() => {
+            if (!tMoved) {
+                // Vibração tátil se disponível
+                if (navigator.vibrate) navigator.vibrate(40);
+
+                // Cria um evento sintético com coordenadas do toque
+                const fakeEvt = {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY,
+                    stopPropagation: () => { },
+                    preventDefault: () => { }
+                };
+                tDragging = false;
+                el.classList.remove('dragging');
+                showCtx(fakeEvt, p.id);
+            }
+        }, LONG_PRESS_MS);
     }, { passive: true });
+
     el.addEventListener('touchmove', e => {
-        if (!tDragging) return; e.stopPropagation(); e.preventDefault();
+        if (!tDragging) return;
+        // Cancela long-press se o dedo se moveu
+        if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; }
+        e.stopPropagation(); e.preventDefault();
         const touch = e.touches[0]; const r = canvasEl.getBoundingClientRect();
-        p.x = (touch.clientX - r.left) / vscale - tOffX; p.y = (touch.clientY - r.top) / vscale - tOffY;
-        el.style.left = p.x + 'px'; el.style.top = p.y + 'px'; tMoved = true; renderLines(cw());
+        p.x = (touch.clientX - r.left) / vscale - tOffX;
+        p.y = (touch.clientY - r.top) / vscale - tOffY;
+        el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+        tMoved = true; renderLines(cw());
     }, { passive: false });
+
     el.addEventListener('touchend', e => {
-        if (!tDragging) return; e.stopPropagation();
+        if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; }
+        if (!tDragging) return;
+        e.stopPropagation();
         tDragging = false; el.classList.remove('dragging');
         if (tMoved) { save(); renderLines(cw()); }
-        else { selPerson(p.id); } // tap = select
+        else { selPerson(p.id); } // tap = selecionar pessoa
+    });
+
+    el.addEventListener('touchcancel', () => {
+        if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; }
+        tDragging = false; el.classList.remove('dragging');
     });
 
     el.addEventListener('contextmenu', e => { if (isShared) return; e.preventDefault(); e.stopPropagation(); showCtx(e, p.id); });
@@ -493,15 +587,13 @@ function sortTable(field) {
     document.querySelectorAll('.tv-th').forEach(th => { const arr = th.querySelector('.sort-arrow'); if (arr) arr.textContent = th.dataset.field === field ? (_tvSort.asc ? '↑' : '↓') : ''; });
 }
 
+
 /* ══ WEBS TABLE VIEW (GERENCIAR TEIAS) ══════════════════════════════════════════ */
 
 // 1. Vincule o clique do botão que já existe
 if ($('btn-manage-webs')) {
     $('btn-manage-webs').onclick = openWebsTableView;
 }
-
-// Adicione 'webs-table-modal' na lista de click-outside (se quiser que feche ao clicar fora)
-// (Busque por: ['edit-modal', 'new-web-modal'...].forEach(...) e adicione 'webs-table-modal' na array)
 
 let _websSort = { field: 'pessoas', asc: false };
 
@@ -556,35 +648,28 @@ function renderWebsTableView() {
         const beijosCount = w.connections ? w.connections.length : 0;
 
         const tr = document.createElement('tr');
-        tr.className = 'tv-tr'; // Reaproveitando classes de estilo
+        tr.className = 'tv-row'; // Usando a mesma classe das linhas de pessoas
 
-        // Destaca se for a teia sendo visualizada no momento
         const isCurrent = S.currentWebId === w.id;
 
         tr.innerHTML = `
-            <td class="tv-td" style="padding:8px; border-bottom:1px solid var(--line);">
-                <div style="font-weight:600; color:var(--text)">
-                  ${w.name} ${isCurrent ? '<span style="font-size: 0.7rem; color: var(--primary); font-weight: normal; margin-left: 4px;">(atual)</span>' : ''}
-                </div>
-            </td>
-            <td class="tv-td" style="text-align:center; padding:8px; border-bottom:1px solid var(--line);">${pessoasCount}</td>
-            <td class="tv-td" style="text-align:center; padding:8px; border-bottom:1px solid var(--line);">${gruposCount}</td>
-            <td class="tv-td" style="text-align:center; padding:8px; border-bottom:1px solid var(--line);">${beijosCount}</td>
-            <td class="tv-td" style="padding:8px; border-bottom:1px solid var(--line);">
-                <div style="display:flex; gap:4px; justify-content:center">
-                    <button class="btn-icon" style="padding:4px; width:auto; height:auto" title="abrir esta teia" onclick="switchWeb('${w.id}'); $('webs-table-modal').classList.remove('v');">
-                        <span class="material-symbols-outlined" style="font-size:18px">visibility</span>
-                    </button>
-                    <button class="btn-icon" style="padding:4px; width:auto; height:auto; color:var(--danger)" title="excluir teia" onclick="deleteWebFromTable('${w.id}')">
-                        <span class="material-symbols-outlined" style="font-size:18px">delete</span>
-                    </button>
-                </div>
-            </td>
+          <td style="padding:8px;font-weight:600;font-size:.84rem;color:var(--text)">
+            ${w.name} ${isCurrent ? '<span style="font-size: 0.7rem; color: var(--primary); font-weight: normal; margin-left: 4px;">(atual)</span>' : ''}
+          </td>
+          <td style="padding:8px;text-align:center;font-weight:700;font-size:1rem;color:var(--text)">${pessoasCount}</td>
+          <td style="padding:8px;text-align:center;font-size:.85rem;color:var(--text-muted)">${gruposCount}</td>
+          <td style="padding:8px;text-align:center;font-weight:700;font-size:1rem;color:var(--text)">${beijosCount}</td>
+          <td style="padding:8px">
+            <div style="display:flex;gap:4px;justify-content:flex-end">
+              <button onclick="event.stopPropagation(); switchWeb('${w.id}'); $('webs-table-modal').classList.remove('v');" style="background:none;border:none;cursor:pointer;color:var(--text);font-size:.72rem;padding:3px 8px;border-radius:6px" title="abrir esta teia"><span class="material-symbols-outlined">visibility</span></button>
+              <button onclick="event.stopPropagation(); confirmDeleteWeb('${w.id}')" style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:.8rem;padding:3px 7px;border-radius:6px" title="excluir"><span class="material-symbols-outlined">delete</span></button>
+            </div>
+          </td>
         `;
         tbody.appendChild(tr);
     });
 
-    // Atualizar contador do rodapé do modal
+    // Atualizar contador do cabeçalho do modal (padronizado com tv-header)
     const countEl = $('webs-tv-count');
     if (countEl) countEl.textContent = `${websList.length} / ${myWebs().length} teia${myWebs().length !== 1 ? 's' : ''}`;
 }
@@ -595,7 +680,7 @@ function sortWebsTable(field) {
         _websSort.asc = !_websSort.asc;
     } else {
         _websSort.field = field;
-        _websSort.asc = field === 'name'; // Nome o padrão é A-Z, números o padrão é Maior-Menor
+        _websSort.asc = field === 'name';
     }
 
     renderWebsTableView();
@@ -617,25 +702,23 @@ function deleteWebFromTable(id) {
     showConfirm(`Tem certeza que deseja excluir a teia "${w.name}" permanentemente? Isso removerá todas as pessoas e conexões dela.`, () => {
         S.webs = S.webs.filter(x => x.id !== id);
 
-        // Se a pessoa deletar a teia que estava aberta no momento
         if (S.currentWebId === id) {
             S.currentWebId = S.webs.length ? S.webs[0].id : null;
             if (S.currentWebId) {
                 switchWeb(S.currentWebId);
             } else {
                 hideAppUI();
-                showNoWebsState(); // Mostra a tela de aplicativo vazio (função que já existe no seu código)
+                showNoWebsState();
             }
         } else {
-            renderTabs(); // Atualiza apenas as tabs caso tenha deletado uma que estava no fundo
+            renderTabs();
         }
 
         save();
-        renderWebsTableView(); // Re-renderiza a tabela gerenciadora
+        renderWebsTableView();
         showToast('Teia excluída com sucesso.');
     });
 }
-
 /* ══ GROUP MEMBER PICKER ═════════════════════════════════ */
 function openGroupPicker(gid) {
     const w = cw();
@@ -1208,7 +1291,29 @@ function renderPanel() {
         row.querySelector('.person-row-del').onclick = e => { e.stopPropagation(); delPerson(p.id); };
         row.onclick = () => selPerson(p.id, true);
         // right-click on person row → same ctx menu as canvas
+        // Right-click (desktop)
         row.addEventListener('contextmenu', e => { e.preventDefault(); showCtx(e, p.id); });
+
+        // Long-press (mobile)
+        let _rowLongPress = null;
+        row.addEventListener('touchstart', e => {
+            const touch = e.touches[0];
+            _rowLongPress = setTimeout(() => {
+                if (navigator.vibrate) navigator.vibrate(40);
+                const fakeEvt = {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY,
+                    stopPropagation: () => { },
+                    preventDefault: () => { }
+                };
+                e.preventDefault();
+                showCtx(fakeEvt, p.id);
+            }, 500);
+        }, { passive: true });
+        row.addEventListener('touchmove', () => clearTimeout(_rowLongPress));
+        row.addEventListener('touchend', () => clearTimeout(_rowLongPress));
+        row.addEventListener('touchcancel', () => clearTimeout(_rowLongPress));
+
         pl.appendChild(row);
     });
 }
@@ -1350,6 +1455,17 @@ document.addEventListener('click', e => {
         sem.classList.remove('v');
     }
 });
+document.addEventListener('touchstart', e => {
+    // Fecha ctx menu ao tocar fora
+    if (!$('ctx-menu').contains(e.target)) hideCtx();
+    if (!$('web-ctx-menu').contains(e.target)) hideWebCtx();
+    // Fecha export menu ao tocar fora
+    const em = $('export-menu');
+    const eb = $('btn-export');
+    if (em && eb && !eb.contains(e.target) && !em.contains(e.target)) {
+        em.classList.remove('v');
+    }
+}, { passive: true });
 
 $('ctx-connect').onclick = () => { const id = ctxId; hideCtx(); if (id) startConn(id); };
 $('ctx-edit').onclick = () => { const id = ctxId; hideCtx(); if (id) openEdit(id); };
@@ -1365,7 +1481,7 @@ function confirmDeleteWeb(webId) {
             const idx = S.webs.findIndex(w => w.id === webId); if (idx === -1) return;
             const wasCurrent = S.currentWebId === webId; S.webs.splice(idx, 1);
             if (wasCurrent) S.currentWebId = S.webs.length ? S.webs[0].id : null;
-            save(); renderTabs();
+            save(); renderTabs(); renderWebsTableView();
             if (!S.webs.length) showNoWebsState(); else switchWeb(S.currentWebId);
         });
     });
@@ -1396,6 +1512,17 @@ document.addEventListener('mousemove', e => {
     tl.setAttribute('x1', r.left + r.width / 2); tl.setAttribute('y1', r.top + r.height / 2);
     tl.setAttribute('x2', e.clientX); tl.setAttribute('y2', e.clientY);
 });
+
+document.addEventListener('touchmove', e => {
+    if (!connectingFrom) return;
+    const fe = nodeEls[connectingFrom]; if (!fe) return;
+    const touch = e.touches[0];
+    const r = fe.getBoundingClientRect(); const tl = $('temp-line');
+    tl.setAttribute('x1', r.left + r.width / 2);
+    tl.setAttribute('y1', r.top + r.height / 2);
+    tl.setAttribute('x2', touch.clientX);
+    tl.setAttribute('y2', touch.clientY);
+}, { passive: true });
 
 wrap.addEventListener('click', () => { if (connectingFrom) { cancelConn(); return; } selectedPersonId = null; renderCanvas(); });
 document.addEventListener('keydown', e => {
@@ -1476,7 +1603,7 @@ function applyZoom(d) {
     vx = cx - (cx - vx) * (ns / vscale); vy = cy - (cy - vy) * (ns / vscale); vscale = ns;
     canvasEl.style.transform = `translate(${vx}px,${vy}px) scale(${vscale})`;
 }
-$('btn-center').onclick = () =>  centerWeb();
+$('btn-center').onclick = () => centerWeb();
 function centerWeb() {
     const w = isShared ? sharedData : cw();
     if (!w || !w.people.length) {
