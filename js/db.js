@@ -65,7 +65,7 @@ async function sendPasswordReset(email) {
     const { data, error } = await window.db.auth.resetPasswordForEmail(email, {
         // URL para onde o usuário será redirecionado após clicar no link.
         // Você precisa lidar com o evento PASSWORD_RECOVERY no onAuthStateChange.
-        redirectTo: window.location.origin + '/index.html'
+        redirectTo: window.location.origin + '/kissweb.html'
     });
     if (error) { logDbError('sendPasswordReset', error); return { data: null, error }; }
     return { data, error: null };

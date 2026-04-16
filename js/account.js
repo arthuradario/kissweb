@@ -151,7 +151,7 @@ async function logoutAccount() {
         }
 
         // redireciona
-        window.location.href = 'logincadastro.html';
+        window.location.href = 'index.html';
 
     } catch (err) {
         console.error(err);

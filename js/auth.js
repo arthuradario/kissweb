@@ -87,7 +87,7 @@ async function doRegister() {
         if (typeof enterApp === 'function') {
             await enterApp(data.user);
         } else {
-            window.location.href = 'index.html';
+            window.location.href = 'kissweb.html';
         }
     }
 }
@@ -119,7 +119,7 @@ async function doLogin() {
         if (typeof enterApp === 'function') {
             await enterApp(data.user);
         } else {
-            window.location.href = 'index.html';
+            window.location.href = 'kissweb.html';
         }
     }
 }
