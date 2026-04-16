@@ -16,20 +16,24 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <link href="css/style.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="js/supabase.js" defer></script>
+  <script src="js/auth.js" defer></script>
+  <script src="js/db.js" defer></script>
   <script src="js/script.js" defer></script>
+  <script src="js/account.js" defer></script>
   <script src="js/fisica.js"></script>
 </head>
 
 <body>
-  <!-- ══ PW GATE ══ -->
+  <!-- ══ PW GATE ══
   <div id="pw-gate">
     <div class="pw-gate-card">
       <div class="lock">senha</div>
       <h3>teia protegida</h3>
       <p>digite a senha para acessar<br>esta teia compartilhada</p>
       <div class="form-group">
-        <input class="form-input" type="password" id="gate-pw" placeholder="senha…"
-          style="text-align:center" autocomplete="current-password" enterkeyhint="go">
+        <input class="form-input" type="password" id="gate-pw" placeholder="senha…" style="text-align:center"
+          autocomplete="current-password" enterkeyhint="go">
       </div>
       <div class="auth-error" id="gate-err" style="margin-top:6px;text-align:left" role="alert"></div>
       <div style="margin-top:12px;display:flex;flex-direction:column;gap:7px">
@@ -37,7 +41,7 @@
         <button class="btn-cancel" onclick="cancelGate()">← voltar</button>
       </div>
     </div>
-  </div>
+  </div> -->
 
   <!-- ══ TOPBAR ══ -->
   <div id="topbar" style="display:none">
@@ -53,19 +57,16 @@
       </span>
     </button>
     <div class="topbar-actions">
-      <button class="btn-icon" id="btn-table-view" title="visualizar teia em tabela" aria-label="tabela" style="display:none">
+      <button class="btn-icon" id="btn-table-view" title="visualizar teia em tabela" aria-label="tabela"
+        style="display:none">
         <span class="material-symbols-outlined icones-topbar">
           table
         </span>
       </button>
-      <button class="btn-icon" id="btn-export" title="exportar/importar teia" aria-label="exportar" style="display:none">
+      <button class="btn-icon" id="btn-export" title="exportar/importar teia" aria-label="exportar"
+        style="display:none">
         <span class="material-symbols-outlined icones-topbar">
           archive
-        </span>
-      </button>
-      <button class="btn-icon" id="btn-toggle-panel" title="painel" aria-label="painel" style="display:none">
-        <span class="material-symbols-outlined icones-topbar">
-          arrow_menu_close
         </span>
       </button>
       <button class="btn-icon" id="btn-theme" title="mudar tema" aria-label="mudar tema">
@@ -73,12 +74,15 @@
           light_mode
         </span>
       </button>
-      <button class="btn-icon" id="btn-account" title="conta" aria-label="conta" onclick="$('user-modal').classList.add('v')">
+      <button class="btn-icon" id="btn-account" title="conta" aria-label="conta">
         <span class="material-symbols-outlined icones-topbar">
           account_circle
         </span>
       </button>
     </div>
+    <button class="btn-icon" id="btn-mobile-menu" title="menu" aria-label="menu">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
     <div id="export-menu" class="topbar-menu">
       <button class="topbar-menu-item" id="export-img">
         <span class="material-symbols-outlined">image</span>
@@ -99,6 +103,32 @@
       </button>
     </div>
     <input type="file" id="import-file" accept=".kiss,.json,application/json" style="display:none">
+  </div>
+
+  <div id="mobile-menu-backdrop"></div>
+  <div id="mobile-menu">
+    <div class="mobile-menu-header">
+      <span>menu</span>
+      <button class="btn-icon" id="btn-mobile-menu-close" aria-label="fechar">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <button class="mobile-menu-item" id="mobile-table-view">
+      <span class="material-symbols-outlined">table</span>
+      visualizar teia
+    </button>
+    <button class="mobile-menu-item" id="mobile-export">
+      <span class="material-symbols-outlined">archive</span>
+      exportar/importar
+    </button>
+    <button class="mobile-menu-item" id="mobile-theme">
+      <span class="material-symbols-outlined">light_mode</span>
+      mudar tema
+    </button>
+    <button class="mobile-menu-item" id="mobile-account">
+      <span class="material-symbols-outlined">account_circle</span>
+      conta
+    </button>
   </div>
 
   <!-- ══ CANVAS ══ -->
@@ -128,8 +158,8 @@
         </div>
         <div class="form-group">
           <label for="inp-name">nome</label>
-          <input class="form-input" id="inp-name" placeholder="ex: pedro, ana…"
-            maxlength="24" autocapitalize="words" enterkeyhint="next">
+          <input class="form-input" id="inp-name" placeholder="ex: pedro, ana…" maxlength="24" autocapitalize="words"
+            enterkeyhint="next">
         </div>
         <div class="form-group">
           <label>gênero</label>
@@ -153,8 +183,7 @@
         <div class="panel-title">grupos</div>
         <div class="group-list" id="group-list"></div>
         <div class="add-group-row">
-          <input class="form-input" id="inp-gname" placeholder="novo grupo…" maxlength="20"
-                 enterkeyhint="done">
+          <input class="form-input" id="inp-gname" placeholder="novo grupo…" maxlength="20" enterkeyhint="done">
           <div class="color-picker-wrapper">
             <input type="color" id="inp-gcolor" value="#ff4d6d" title="selecionar cor">
             <span class="material-symbols-outlined color-icon">colors</span>
@@ -175,7 +204,64 @@
       <div class="people-list" id="people-list"></div>
     </div>
   </div>
-  <button id="panel-toggle" style="display:none" aria-label="abrir/fechar painel">◀</button>
+  <button class="btn-icon" id="btn-toggle-panel" title="painel" aria-label="painel">
+    <span class="material-symbols-outlined icones-topbar">
+      arrow_menu_open
+    </span>
+  </button>
+
+  <!-- ══ MODAL: Account ══ -->
+  <div class="modal-overlay" id="account-modal">
+    <div class="modal" style="width:min(360px,100%)">
+
+      <h3 id="acc-title">olá!</h3>
+
+      <div id="acc-msg" style="font-size:.78rem;margin-bottom:10px;display:none"></div>
+
+      <!-- NOME -->
+      <div class="form-group">
+        <label>nome</label>
+
+        <input class="form-input" id="acc-name" maxlength="30">
+
+        <button class="btn-primary" style="width:100%;margin-top:8px" onclick="saveAccountName()">
+          salvar nome
+        </button>
+      </div>
+
+      <!-- EMAIL -->
+      <div class="form-group">
+        <label>e-mail</label>
+        <div id="acc-email-display"
+          style="padding:10px 0;color:var(--text-muted);font-size:.85rem;border-bottom:1px solid var(--border)">
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- SENHA -->
+      <div class="form-group">
+        <label>senha</label>
+        <button class="btn-primary" style="width:100%" onclick="requestPasswordReset()">
+          enviar e-mail para redefinir senha
+        </button>
+      </div>
+
+      <hr>
+
+      <!-- SAIR -->
+      <button class="btn-cancel" style="width:100%" onclick="logoutAccount()">
+        sair da conta
+      </button>
+
+      <div class="modal-actions" style="margin-top:10px">
+        <button class="btn-cancel" onclick="$('account-modal').classList.remove('v')">
+          fechar
+        </button>
+      </div>
+
+    </div>
+  </div>
 
   <!-- ══ CTX MENUS ══ 
        On mobile: triggered by long-press (500ms touchstart) instead of right-click.
@@ -260,8 +346,8 @@
       <h3>NOVA TEIA</h3>
       <div class="form-group">
         <label for="new-web-name">nome da teia</label>
-        <input class="form-input" id="new-web-name"
-          placeholder="ex: turma b, festa jun…" maxlength="28" enterkeyhint="go">
+        <input class="form-input" id="new-web-name" placeholder="ex: turma, escola, cidade..." maxlength="28"
+          enterkeyhint="go">
       </div>
       <div class="modal-actions">
         <button class="btn-cancel" onclick="$('new-web-modal').classList.remove('v')">cancelar</button>
@@ -277,8 +363,7 @@
       <p id="um-email" style="font-size:.73rem;color:var(--text-muted);margin-bottom:16px"></p>
       <button class="btn-primary" onclick="doLogout()">sair da conta</button>
       <div style="margin-top:8px">
-        <button class="btn-cancel" style="width:100%"
-          onclick="$('user-modal').classList.remove('v')">fechar</button>
+        <button class="btn-cancel" style="width:100%" onclick="$('user-modal').classList.remove('v')">fechar</button>
       </div>
     </div>
   </div>
@@ -327,7 +412,7 @@
       <div class="tv-header">
         <h3>PESSOAS</h3>
         <input type="search" class="inp-busca-tabela" id="tv-search" placeholder="buscar…"
-               oninput="renderTableView(cw())" enterkeyhint="search">
+          oninput="renderTableView(cw())" enterkeyhint="search">
         <span id="tv-count" style="font-size:.75rem;color:var(--text-muted)"></span>
         <button onclick="$('table-modal').classList.remove('v')" class="btn-icon" aria-label="fechar">
           <span class="material-symbols-outlined icones-topbar">close</span>
@@ -338,9 +423,20 @@
           <thead>
             <tr>
               <th style="width:44px"></th>
-              <th class="tv-th" data-field="name" onclick="sortTable('name')">nome <span class="sort-arrow"></span></th>
-              <th class="tv-th" data-field="gender" onclick="sortTable('gender')">gênero <span class="sort-arrow"></span></th>
-              <th class="tv-th" data-field="kisses" onclick="sortTable('kisses')" style="text-align:center">beijos <span class="sort-arrow">↓</span></th>
+              <th class="tv-th" data-field="name" onclick="sortTable('name')">nome
+                <span class="material-symbols-outlined sort-arrow">
+                </span>
+              </th>
+              <th class="tv-th" data-field="gender" onclick="sortTable('gender')">gênero
+                <span class="material-symbols-outlined sort-arrow">
+
+                </span>
+              </th>
+              <th class="tv-th" data-field="kisses" onclick="sortTable('kisses')" style="text-align:center">beijos
+                <span class="material-symbols-outlined sort-arrow">
+                  keyboard_arrow_up
+                </span>
+              </th>
               <th>beijou</th>
               <th>grupos</th>
               <th style="width:90px"></th>
@@ -354,11 +450,12 @@
 
   <!-- ══ MODAL: Manage Webs ══ -->
   <div class="modal-overlay" id="webs-table-modal" style="align-items:stretch;justify-content:stretch;padding:0">
-    <div class="modal" style="width:100%;height:100%;max-height:100%;border-radius:0;display:flex;flex-direction:column;padding:0">
+    <div class="modal"
+      style="width:100%;height:100%;max-height:100%;border-radius:0;display:flex;flex-direction:column;padding:0">
       <div class="tv-header">
         <h3>TEIAS</h3>
         <input type="search" class="inp-busca-tabela" id="webs-tv-search" placeholder="buscar teia..."
-               oninput="renderWebsTableView()" enterkeyhint="search">
+          oninput="renderWebsTableView()" enterkeyhint="search">
         <span id="webs-tv-count" style="font-size:.75rem;color:var(--text-muted)"></span>
         <button onclick="$('webs-table-modal').classList.remove('v')" class="btn-icon" aria-label="fechar">
           <span class="material-symbols-outlined icones-topbar">close</span>
@@ -368,10 +465,29 @@
         <table class="tv-table">
           <thead>
             <tr>
-              <th class="tv-th webs-tv-th" data-field="name" onclick="sortWebsTable('name')">nome da teia <span class="sort-arrow"></span></th>
-              <th class="tv-th webs-tv-th" data-field="pessoas" onclick="sortWebsTable('pessoas')" style="text-align:center">pessoas <span class="sort-arrow">↓</span></th>
-              <th class="tv-th webs-tv-th" data-field="grupos" onclick="sortWebsTable('grupos')" style="text-align:center">grupos <span class="sort-arrow"></span></th>
-              <th class="tv-th webs-tv-th" data-field="beijos" onclick="sortWebsTable('beijos')" style="text-align:center">beijos <span class="sort-arrow"></span></th>
+              <th class="tv-th webs-tv-th" data-field="name" onclick="sortWebsTable('name')">nome da teia
+                <span class="material-symbols-outlined sort-arrow">
+
+                </span>
+              </th>
+              <th class="tv-th webs-tv-th" data-field="pessoas" onclick="sortWebsTable('pessoas')"
+                style="text-align:center">pessoas
+                <span class="material-symbols-outlined sort-arrow">
+                  keyboard_arrow_down
+                </span>
+              </th>
+              <th class="tv-th webs-tv-th" data-field="grupos" onclick="sortWebsTable('grupos')"
+                style="text-align:center">grupos
+                <span class="material-symbols-outlined sort-arrow">
+
+                </span>
+              </th>
+              <th class="tv-th webs-tv-th" data-field="beijos" onclick="sortWebsTable('beijos')"
+                style="text-align:center">beijos
+                <span class="material-symbols-outlined sort-arrow">
+
+                </span>
+              </th>
               <th style="width:90px"></th>
             </tr>
           </thead>
@@ -402,8 +518,8 @@
       <h3>BUSCAR</h3>
       <label class="modal-label" for="search-input">nome da pessoa</label>
       <div class="search-box">
-        <input class="form-input" id="search-input" type="search"
-               placeholder="digite para filtrar…" enterkeyhint="search">
+        <input class="form-input" id="search-input" type="search" placeholder="digite para filtrar…"
+          enterkeyhint="search">
       </div>
       <p style="font-size:.76rem;color:var(--text-muted);margin-top:8px;line-height:1.5">
         Digite para buscar. Toque em uma pessoa para centralizar e destacar suas conexões.
@@ -431,10 +547,12 @@
     <h2>nenhuma teia</h2>
     <p>crie ou importe sua primeira teia para começar!</p>
     <div id="btns-no-webs">
-      <button class="btn-new-web btn-new-web-empty" id="btn-create-first-web" title="criar teia" aria-label="criar teia">
+      <button class="btn-new-web btn-new-web-empty" id="btn-create-first-web" title="criar teia"
+        aria-label="criar teia">
         <span class="material-symbols-outlined icone-adicionar">add_circle</span>
       </button>
-      <button class="btn-new-web btn-new-web-empty" id="import-first-file-btn" title="importar teia" aria-label="importar teia">
+      <button class="btn-new-web btn-new-web-empty" id="import-first-file-btn" title="importar teia"
+        aria-label="importar teia">
         <span class="material-symbols-outlined icone-adicionar">upload</span>
       </button>
     </div>
@@ -444,27 +562,34 @@
   <div id="toast" role="status" aria-live="polite"></div>
 
   <!-- ══ ZOOM CONTROLS ══ -->
-  <div id="zoom-controls" style="display:none">
-    <button class="zoom-btn" id="search-open" title="buscar pessoa" aria-label="buscar pessoa">
-      <span class="material-symbols-outlined">search</span>
-    </button>
-    <button class="zoom-btn" id="zoom-in" title="aproximar" aria-label="aproximar">
-      <span class="material-symbols-outlined">add</span>
-    </button>
-    <button class="zoom-btn" id="zoom-out" title="afastar" aria-label="afastar">
-      <span class="material-symbols-outlined">remove</span>
-    </button>
-    <button class="zoom-btn" id="btn-center" title="centralizar" aria-label="centralizar">
-      <span class="material-symbols-outlined">my_location</span>
-    </button>
-    <div id="btns-fisica">
-      <button class="zoom-btn" id="btn-physics" title="física" aria-label="física">
-        <span class="material-symbols-outlined">stream</span>
+  <div id="controls-wrapper" style="display:flex">
+
+    <div id="zoom-controls" style="display:none">
+      <button class="zoom-btn" id="search-open" title="buscar pessoa" aria-label="buscar pessoa">
+        <span class="material-symbols-outlined">search</span>
+      </button>
+      <button class="zoom-btn" id="zoom-in" title="aproximar" aria-label="aproximar">
+        <span class="material-symbols-outlined">add</span>
+      </button>
+      <button class="zoom-btn" id="zoom-out" title="afastar" aria-label="afastar">
+        <span class="material-symbols-outlined">remove</span>
+      </button>
+      <button class="zoom-btn" id="btn-center" title="centralizar" aria-label="centralizar">
+        <span class="material-symbols-outlined">my_location</span>
+      </button>
+      <div id="btns-fisica">
+        <button class="zoom-btn" id="btn-physics" title="física" aria-label="física">
+          <span class="material-symbols-outlined">stream</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="shuffle-container">
+      <button class="zoom-btn" id="btn-shuffle" title="reorganizar" aria-label="reorganizar" style="display:none">
+        <span class="material-symbols-outlined">question_exchange</span>
       </button>
     </div>
-    <button class="zoom-btn" id="btn-shuffle" title="reorganizar" aria-label="reorganizar" style="display:none">
-      <span class="material-symbols-outlined">question_exchange</span>
-    </button>
+
   </div>
 
 </body>

@@ -426,13 +426,18 @@ body {
     flex-wrap: nowrap;
     padding-bottom: 4px;
     scroll-behavior: smooth;
-    /* Hide scrollbar on mobile for cleaner look */
-    -ms-overflow-style: none;
-    scrollbar-width: none;
 }
 
 .web-tabs::-webkit-scrollbar {
-    height: 0;
+    height: 6px;
+}
+
+.web-tabs::-webkit-scrollbar-thumb {
+    background: #b3b3b3;
+}
+
+.web-tabs::-webkit-scrollbar-thumb:hover {
+    background: #8a8a8a;
 }
 
 .web-tab-container {
@@ -443,7 +448,6 @@ body {
 
 .web-tab {
     padding: 7px 12px;
-    min-height: var(--touch-min);
     display: flex;
     align-items: center;
     border-radius: 20px;
@@ -581,6 +585,94 @@ body {
     stroke-width: 1.8;
     stroke-linecap: round;
     stroke-linejoin: round;
+}
+
+#btn-mobile-menu {
+    display: none;
+}
+
+#mobile-menu-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .28);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .2s ease;
+    z-index: 150;
+}
+
+#mobile-menu-backdrop.v {
+    opacity: 1;
+    visibility: visible;
+}
+
+#mobile-menu {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(88vw, 280px);
+    max-width: 280px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    box-shadow: -8px 0 24px rgba(0, 0, 0, .12);
+    transform: translateX(100%);
+    transition: transform .25s ease;
+    z-index: 160;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 14px;
+}
+
+#mobile-menu.v {
+    transform: translateX(0);
+}
+
+.mobile-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: .84rem;
+}
+
+.mobile-menu-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: background .2s, border-color .2s;
+}
+
+.mobile-menu-item .material-symbols-outlined {
+    font-size: 1.2rem;
+}
+
+.mobile-menu-item:active {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+}
+
+#mobile-menu .btn-icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
 }
 
 /* ══ SISTEMA DE MENUS UNIFICADO ══ */
@@ -947,41 +1039,63 @@ svg#lines {
     transform: translateX(0);
 }
 
-#panel-toggle {
+/* ESTRUTURA E FORMATO (Padronizado com .btn-new-web) */
+#btn-toggle-panel {
     position: fixed;
     top: 50%;
-    right: 0;
+    right: 15px; /* Desgruda um pouco da borda para o formato redondo ficar legal */
     transform: translateY(-50%);
     z-index: 90;
-    width: 34px;
-    /* Ensure minimum 44px height for touch */
-    height: 52px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-right: none;
-    border-radius: 10px 0 0 10px;
-    cursor: pointer;
+    
+    /* Tamanho e formato */
+    width: 38px;
+    height: 38px;
+    min-width: 44px; /* Padrão de toque seguro */
+    min-height: 44px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    
+    /* Alinhamento interno */
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: .85rem;
-    color: var(--text-muted);
-    transition: right .26s cubic-bezier(.4, 0, .2, 1), background .2s;
+    cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    
+    /* Cores base */
+    background-color: var(--bgbtns);
+    
+    /* Transições unificadas (movimento do painel + cores) */
+    transition: right .26s cubic-bezier(.4, 0, .2, 1), all .2s;
 }
 
-#panel-toggle:active {
-    background: var(--bg);
+/* COR DO ÍCONE PADRÃO */
+#btn-toggle-panel .material-symbols-outlined {
+    color: var(--surface); /* Usando a mesma variável do btn-new-web */
+    transition: color 0.2s;
 }
 
+/* EFEITO DE CLIQUE (Ativo) */
+#btn-toggle-panel:active {
+    background-color: var(--accent);
+}
+#btn-toggle-panel:active .material-symbols-outlined {
+    color: #fff;
+}
+
+/* EFEITO DE HOVER (Apenas para Mouse/Desktop) */
 @media (hover: hover) {
-    #panel-toggle:hover {
-        background: var(--bg);
+    #btn-toggle-panel:hover {
+        background-color: var(--accent);
+        border-color: var(--accent); /* Pinta a borda junto para ficar uniforme */
+    }
+    #btn-toggle-panel:hover .material-symbols-outlined {
+        color: #fff;
     }
 }
 
-#panel.open~#panel-toggle {
-    right: var(--panel-w);
+#panel.open~#btn-toggle-panel {
+    right: calc(var(--panel-w) + 10px); /* Move o botão junto com o painel para manter a distância */
 }
 
 .panel-scroll {
@@ -2026,29 +2140,32 @@ textarea {
     cursor: grabbing;
 }
 
-/* ══ ZOOM CONTROLS ══ */
-#zoom-controls {
+/* ══ CONTROLS WRAPPER (Novo) ══ */
+#controls-wrapper {
     position: fixed;
     bottom: calc(22px + env(safe-area-inset-bottom, 0px));
     left: 18px;
     display: flex;
-    flex-direction: column;
-    gap: 6px;
+    gap: 12px;
+    align-items: flex-end; /* Essa é a mágica: alinha a coluna e o shuffle pela parte de baixo */
     z-index: 90;
 }
 
-#btn-shuffle {
-    position: fixed;
-    bottom: 22px;
-    left: 18px;
+/* ══ ZOOM CONTROLS ══ */
+#zoom-controls {
+    /* Retiramos o position e bottom daqui, pois o wrapper assumiu isso */
     display: flex;
     flex-direction: column;
     gap: 6px;
-    z-index: 90;
 }
 
+/* ══ BOTÃO SHUFFLE ══ */
+/* O CSS do #btn-shuffle foi totalmente removido daqui. 
+   Não precisamos mais de position: absolute nele, o Flexbox do wrapper já posiciona. */
+
+/* ══ ESTILO DOS BOTÕES (Mantido igual) ══ */
 .zoom-btn {
-    width: 44px;  /* 44px minimum touch target */
+    width: 44px;
     height: 44px;
     border-radius: 50%;
     background: var(--surface);
@@ -2087,10 +2204,6 @@ textarea {
         color: #fff;
         border-color: var(--accent);
     }
-}
-
-#btn-shuffle {
-    margin-left: 50px;
 }
 
 /* ══ EMPTY / NO-WEBS ══ */
@@ -2447,29 +2560,71 @@ code {
     }
 
     /* Panel toggle: tab at bottom instead of side */
-    #panel-toggle {
+    #btn-toggle-panel {
+        position: fixed;
         top: auto;
-        bottom: 0;
-        right: 16px;
-        transform: none;
+        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
         width: 52px;
-        height: 30px;
-        border-radius: 10px 10px 0 0;
+        height: 52px;
+        border-radius: 50%;
         border-bottom: none;
-        /* Ensure safe area */
-        bottom: env(safe-area-inset-bottom, 0);
+        z-index: 120;
     }
 
-    #panel.open ~ #panel-toggle {
-        right: 16px;
-        bottom: 70vh;
+    #panel.open ~ #btn-toggle-panel {
+        left: 50%;
+        right: auto;
+        bottom: calc(70vh + 12px);
+        transform: translateX(-50%);
     }
 
-    /* Zoom controls: move to top-left under topbar when panel is open */
-    #zoom-controls {
+    /* Zoom controls: move above the canvas area */
+    #controls-wrapper {
         bottom: auto;
-        top: calc(var(--topbar-h) + 12px);
-        left: 12px;
+        top: calc(var(--topbar-h) + 10px);
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        justify-content: center;
+        background: transparent;
+        padding: 0 6px;
+    }
+
+    #zoom-controls {
+        flex-direction: row;
+        padding: 6px;
+        background: rgba(255, 255, 255, .95);
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    #zoom-controls .zoom-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    .topbar-actions {
+        display: none;
+    }
+
+    #btn-new-web {
+        margin-right: 12px;
+    }
+
+    #btn-mobile-menu {
+        display: inline-flex;
+    }
+
+    .brand {
+        font-size: .8rem;
+    }
+
+    #logo {
+        width: 28px;
     }
 
     /* Topbar actions: tighter spacing */
@@ -2546,7 +2701,7 @@ code {
         height: 55vh;
     }
 
-    #panel.open ~ #panel-toggle {
+    #panel.open ~ #btn-toggle-panel {
         bottom: 55vh;
     }
 
@@ -2572,3 +2727,4 @@ input::placeholder {
     color: var(--text-muted);
     opacity: .8;
 }
+
