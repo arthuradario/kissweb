@@ -184,7 +184,11 @@ const GICONS = {
     female: `<svg viewBox="0 0 24 24" fill="white"><circle cx="12" cy="8" r="5"/><rect x="11" y="13" width="2" height="8" rx="1"/><rect x="8.5" y="18" width="7" height="2" rx="1"/></svg>`,
     male:   `<svg viewBox="0 0 24 24" fill="white"><circle cx="9.5" cy="14.5" r="5.5"/><rect x="15.5" y="3" width="5.5" height="2" rx="1"/><rect x="19" y="3" width="2" height="5.5" rx="1"/><line x1="13.5" y1="10.5" x2="19.5" y2="4.5" stroke="white" stroke-width="2.2" stroke-linecap="round"/></svg>`
 };
-const PERSON_PH = `<span class="material-symbols-outlined" style="font-size:inherit">person</span>`;
+const PERSON_PH = `<span class="material-symbols-outlined" style="font-size:48px">person</span>`;
+
+function personPlaceholderHTML(gender) {
+    return `<div class="person-placeholder person-placeholder-${gender}"><span class="material-symbols-outlined">person</span></div>`;
+}
 
 function normText(v) {
     return (v||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
@@ -573,7 +577,7 @@ function renderPanel() {
             if (p.id === selectedPersonId) row.classList.add('sel');
             const ph = p.photo
                 ? `<img src="${p.photo}">`
-                : `<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+                : personPlaceholderHTML(p.gender);
             row.innerHTML = `<div class="person-row-photo">${ph}</div><div class="person-row-info"><div class="person-row-name">${p.name}</div><div class="person-row-sub">${kc} beijo${kc!==1?'s':''}${gn?' · '+gn:''}</div></div><div class="person-row-del"><span class="material-symbols-outlined">close</span></div>`;
             row.querySelector('.person-row-del').onclick = e => { e.stopPropagation(); delPerson(p.id); };
             row.onclick = () => selPerson(p.id, true);
@@ -699,7 +703,7 @@ function renderSearchResults(q) {
         row.className = 'search-result' + (idx === 0 ? ' active' : '');
         const photo = p.photo
             ? `<img class="sr-photo" src="${p.photo}">`
-            : `<div class="sr-photo"><span class="material-symbols-outlined">person</span></div>`;
+            : personPlaceholderHTML(p.gender);
         row.innerHTML = `${photo}<div class="sr-name">${p.name}</div><div class="sr-meta">${kc} beijo${kc!==1?'s':''}</div>`;
         row.onclick = () => { hideSearchModal(); selPerson(p.id, true); };
         list.appendChild(row);
@@ -751,7 +755,9 @@ async function addPerson() {
     $('inp-name').value = ''; addPhoto = null;
     const inp = $('inp-photo'); if (inp) inp.value = '';
     const prevEl = $('pu-add-prev');
-    if (prevEl) prevEl.innerHTML = `<div class="pu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="pu-label">clique para adicionar foto</div>`;
+    if (prevEl) prevEl.innerHTML = `
+    <div class="pu-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="pu-label">clique para adicionar foto</div>`;
     renderGroupSelector('group-selector-add', w, 'inp-group');
     selGender('female');
     showToast(`${name} adicionado${selGenderVal === 'female' ? 'a' : ''}!`);
@@ -1097,7 +1103,7 @@ function renderTableView(w) {
         const tr = document.createElement('tr'); tr.className = 'tv-row';
         const photoHtml = p.photo
             ? `<img src="${p.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;vertical-align:middle">`
-            : `<div style="width:32px;height:32px;border-radius:50%;background:${p.gender==='female'?'var(--female-light)':'var(--male-light)'};border:2px solid ${p.gender==='female'?'var(--female)':'var(--male)'};display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;color:${p.gender==='female'?'var(--female)':'var(--male)'}">${p.gender==='female'?'♀':'♂'}</div>`;
+            : personPlaceholderHTML(p.gender);
         tr.innerHTML = `
             <td style="padding:8px">${photoHtml}</td>
             <td style="padding:8px;font-weight:600;font-size:.84rem;color:var(--text)">${p.name}</td>
@@ -1384,6 +1390,11 @@ document.addEventListener('keydown', e => {
 
 // ═══ INICIALIZAÇÃO ════════════════════════════════════════════
 async function enterApp(user) {
+    // Mostra loading apenas para usuários logados (que fazem query no banco)
+    const loading = $('loading-overlay');
+    const showLoading = user !== null;
+    if (showLoading && loading) loading.classList.remove('hidden');
+
     const overlay = $('auth-overlay');
     if (overlay) overlay.classList.add('hidden');
 
@@ -1399,6 +1410,10 @@ async function enterApp(user) {
     // Se user === null, S.currentUser já foi definido como guest em doGuest()
 
     showAppUI();
+
+    // Esconde loading
+    if (showLoading && loading) loading.classList.add('hidden');
+
     if (!myWebs().length) { showNoWebsState(); return; }
     if (!S.currentWebId || !myWebs().find(w => w.id === S.currentWebId)) {
         S.currentWebId = myWebs()[0].id;
@@ -1417,7 +1432,9 @@ async function init() {
     const user = await checkSession();
 
     if (user) {
-        // Sessão válida: entra direto no app
+        // Sessão válida: mostra loading e entra no app
+        const loading = $('loading-overlay');
+        if (loading) loading.classList.remove('hidden');
         await enterApp(user);
     } else {
         // Sem sessão: mostra tela de auth

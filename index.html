@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kissweb - entrar</title>
+    <link href="css/style.css" rel="stylesheet">
+
+    <!--
+    ══════════════════════════════════════════════════
+    ORDEM DE CARREGAMENTO — NÃO ALTERE
+    1. Supabase CDN (sem defer — deve estar disponível antes dos outros)
+    2. supabase.js (define window.db)
+    3. auth.js     (doLogin, doRegister, doGuest)
+
+    NOTA: script.js NÃO é carregado aqui.
+    Ele é exclusivo do kissweb.html (tela principal do app).
+    ══════════════════════════════════════════════════
+    -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="js/supabase.js" defer></script>
+    <script src="js/auth.js" defer></script>
+</head>
+<body>
+
+<!-- ══ AUTH OVERLAY ══════════════════════════════════════════ -->
+<div id="auth-overlay" class="auth-overlay-wrap">
+  <div class="auth-card">
+
+    <!-- Logo -->
+    <div class="auth-logo">
+      <div class="wordmark">kissweb</div>
+      <div class="tagline">conecte histórias, um beijo de cada vez</div>
+    </div>
+
+    <!-- Abas Login / Cadastro -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" type="button" onclick="switchTab('login')">entrar</button>
+      <button class="auth-tab"        type="button" onclick="switchTab('register')">cadastrar</button>
+    </div>
+
+    <!-- ── Formulário de Login ──────────────────────────── -->
+    <!--
+      Usamos onsubmit em vez de um botão que chama diretamente a função.
+      Isso garante que o Enter no teclado virtual de celular também funcione.
+    -->
+    <form id="form-login" class="auth-form"
+          autocomplete="on"
+          onsubmit="event.preventDefault(); doLogin()">
+
+      <div class="field-group">
+        <label for="l-email">e-mail</label>
+        <input type="email" id="l-email"
+               placeholder="seu@email.com"
+               autocomplete="email"
+               required>
+      </div>
+
+      <div class="field-group">
+        <label for="l-pw">senha</label>
+        <input type="password" id="l-pw"
+               placeholder="••••••••"
+               autocomplete="current-password"
+               required>
+      </div>
+
+      <div class="auth-error" id="l-err"></div>
+
+      <button class="auth-btn" type="submit">entrar</button>
+
+      <div class="auth-sep">ou</div>
+
+      <button class="auth-guest" type="button" onclick="doGuest()">
+        continuar sem conta (modo visitante)
+      </button>
+
+      <!-- Link para redefinição de senha -->
+      <div style="text-align:center;margin-top:8px">
+        <button type="button" class="auth-link"
+                onclick="document.getElementById('reset-section').classList.toggle('v')">
+          esqueci minha senha
+        </button>
+      </div>
+
+      <!-- Seção de redefinição (oculta por padrão) -->
+      <div id="reset-section" class="reset-section" style="display:none">
+        <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px">
+          informe seu e-mail para receber o link de redefinição de senha.
+        </p>
+        <input type="email" id="reset-email" placeholder="seu@email.com"
+               class="auth-input" style="margin-bottom:8px">
+        <div class="auth-error v" id="reset-msg" style="display:none"></div>
+        <button type="button" class="auth-btn"
+                onclick="requestPasswordReset()">enviar link</button>
+      </div>
+
+    </form>
+
+    <!-- ── Formulário de Cadastro ────────────────────────── -->
+    <form id="form-register" class="auth-form"
+          autocomplete="on"
+          onsubmit="event.preventDefault(); doRegister()"
+          style="display:none">
+
+      <div class="field-group">
+        <label for="r-name">nome</label>
+        <input type="text" id="r-name"
+               placeholder="seu nome"
+               autocomplete="name"
+               required>
+      </div>
+
+      <div class="field-group">
+        <label for="r-email">e-mail</label>
+        <input type="email" id="r-email"
+               placeholder="seu@email.com"
+               autocomplete="email"
+               required>
+      </div>
+
+      <div class="field-group">
+        <label for="r-pw">senha <span style="font-size:.75em;color:var(--text-muted)">(mín. 6 caracteres)</span></label>
+        <input type="password" id="r-pw"
+               placeholder="••••••••"
+               autocomplete="new-password"
+               minlength="6"
+               required>
+      </div>
+
+      <div class="auth-error" id="r-err"></div>
+
+      <button class="auth-btn" type="submit">criar conta</button>
+
+      <div class="auth-sep">ou</div>
+
+      <button class="auth-guest" type="button" onclick="doGuest()">
+        continuar sem conta (modo visitante)
+      </button>
+
+    </form>
+
+  </div>
+</div>
+
+<script>
+// Redireciona para o app se o Supabase detectar sessão válida ao abrir esta página.
+// Necessário para quando o usuário clica no link de confirmação de e-mail e é
+// redirecionado de volta ao site com um token na URL.
+window.addEventListener('load', async () => {
+    // Aguarda o SDK do Supabase processar o token na URL (se houver)
+    if (window.db) {
+        const { data } = await window.db.auth.getSession();
+        if (data && data.session) {
+            window.location.href = 'kissweb.html';
+        }
+    }
+});
+
+// Mostra/esconde a seção de reset de senha
+document.getElementById('reset-section')?.addEventListener('toggle', function() {
+    this.style.display = this.open ? 'block' : 'none';
+});
+
+// Corrige o toggle da seção de reset
+function toggleResetSection() {
+    const el = document.getElementById('reset-section');
+    if (!el) return;
+    const isHidden = el.style.display === 'none' || !el.style.display;
+    el.style.display = isHidden ? 'block' : 'none';
+    const resetMsg = document.getElementById('reset-msg');
+    if (resetMsg) resetMsg.style.display = 'none';
+}
+
+// Substitui o onclick inline por função mais robusta
+document.addEventListener('DOMContentLoaded', () => {
+    const forgotBtn = document.querySelector('[onclick*="reset-section"]');
+    if (forgotBtn) {
+        forgotBtn.removeAttribute('onclick');
+        forgotBtn.addEventListener('click', toggleResetSection);
+    }
+    const resetMsg = document.getElementById('reset-msg');
+    if (resetMsg) resetMsg.style.display = 'none';
+});
+
+// Função de redefinição de senha (usa db.js)
+// Como db.js não é carregado nesta página, implementamos inline usando window.db diretamente.
+async function requestPasswordReset() {
+    const emailInput = document.getElementById('reset-email');
+    const resetMsg   = document.getElementById('reset-msg');
+    const email      = emailInput ? emailInput.value.trim() : '';
+
+    if (!email) {
+        if (resetMsg) { resetMsg.textContent = 'informe o e-mail.'; resetMsg.style.display = 'block'; }
+        return;
+    }
+
+    const { error } = await window.db.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/kissweb.html'
+    });
+
+    if (resetMsg) {
+        if (error) {
+            resetMsg.textContent = 'erro: ' + error.message;
+            resetMsg.style.color = '#ff4d6d';
+        } else {
+            resetMsg.textContent = 'e-mail enviado! verifique sua caixa de entrada.';
+            resetMsg.style.color = '#e8608a';
+        }
+        resetMsg.style.display = 'block';
+    }
+}
+</script>
+
+</body>
+</html>
